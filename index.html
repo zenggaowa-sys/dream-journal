@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>梦境日记</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a78bfa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0c0a1a;
+  --bg2:#110e24;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --card-hover:rgba(255,255,255,.10);
+  --text:#e8e4f0;
+  --text-dim:rgba(232,228,240,.5);
+  --text-muted:rgba(232,228,240,.3);
+  --accent:#a78bfa;
+  --accent2:#818cf8;
+  --accent-glow:rgba(167,139,250,.25);
+  --pink:#f0abfc;
+  --teal:#5eead4;
+  --rose:#fda4af;
+  --amber:#fbbf24;
+  --sky:#7dd3fc;
+  --lime:#a3e635;
+  --orange:#fb923c;
+  --radius:20px;
+  --radius-sm:14px;
+  --radius-pill:50px;
+  /* Safe area insets for notch / home indicator */
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
+
+body{
+  font-family:'ZCOOL KuaiLe','Nunito','PingFang SC',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+
+/* ====== Canvas BG ====== */
+canvas#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ====== App Shell ====== */
+.app{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative;z-index:1;padding:0 var(--sal) 0 var(--sar)}
+
+/* ====== Header ====== */
+.header{
+  padding:calc(20px + var(--sat)) 24px 18px;text-align:center;position:relative;
+}
+.header-glow{
+  position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,.15),transparent 70%);
+  pointer-events:none;filter:blur(40px);
+}
+.header .moon{
+  font-size:clamp(40px, 12vw, 56px);display:block;margin-bottom:4px;position:relative;z-index:1;
+  animation:moonFloat 6s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(167,139,250,.3));
+}
+@keyframes moonFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.header h1{
+  font-size:clamp(18px, 5.5vw, 24px);font-weight:400;letter-spacing:clamp(4px, 2vw, 8px);
+  background:linear-gradient(135deg,var(--text),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  position:relative;z-index:1;
+}
+.header .sub{
+  font-size:clamp(10px, 2.8vw, 12px);color:var(--text-muted);margin-top:6px;letter-spacing:clamp(2px, 1vw, 4px);
+}
+
+/* ====== Stats Bar ====== */
+.stats-bar{
+  display:flex;gap:8px;padding:4px 20px 10px;
+}
+.stat-chip{
+  flex:1;padding:10px 8px;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-sm);text-align:center;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:.3s;cursor:default;
+}
+.stat-chip:active{transform:scale(.96)}
+.stat-chip .num{font-size:clamp(18px, 5vw, 22px);color:var(--accent);line-height:1.2}
+.stat-chip .label{font-size:clamp(9px, 2.5vw, 10px);color:var(--text-muted);letter-spacing:1px;margin-top:2px}
+
+/* ====== Search ====== */
+.search-wrap{padding:0 20px 6px}
+.search-box{
+  position:relative;
+}
+.search-box input{
+  width:100%;padding:12px 18px 12px 42px;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-pill);color:var(--text);font-size:14px;
+  font-family:inherit;outline:none;transition:.3s;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.search-box input:focus{border-color:rgba(167,139,250,.4);box-shadow:0 0 0 3px rgba(167,139,250,.1)}
+.search-box input::placeholder{color:var(--text-muted)}
+.search-box .icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--text-muted);pointer-events:none;
+}
+
+/* ====== Mood Filter ====== */
+.mood-filter{
+  display:flex;gap:6px;padding:8px 20px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.mood-filter::-webkit-scrollbar{display:none}
+.mood-chip{
+  flex-shrink:0;padding:6px 14px;border-radius:var(--radius-pill);
+  font-size:12px;border:1px solid var(--card-border);background:var(--card);
+  color:var(--text-dim);cursor:pointer;transition:.3s;white-space:nowrap;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  font-family:inherit;
+}
+.mood-chip:active{transform:scale(.95)}
+.mood-chip.active{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.3);
+  color:var(--accent);
+}
+
+/* ====== Dream List ====== */
+.dream-list{padding:8px 16px calc(120px + var(--sab))}
+
+.dream-card{
+  position:relative;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius);padding:18px 20px 16px;margin-bottom:12px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  cursor:pointer;transition:all .35s cubic-bezier(.25,.8,.25,1);
+  overflow:hidden;
+}
+.dream-card::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:linear-gradient(135deg,transparent 40%,rgba(167,139,250,.04) 100%);
+  pointer-events:none;transition:opacity .3s;opacity:0;
+}
+.dream-card:hover::before,.dream-card:active::before{opacity:1}
+.dream-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(167,139,250,.2);
+  box-shadow:0 8px 32px rgba(0,0,0,.3),0 0 0 1px rgba(167,139,250,.1);
+}
+.dream-card:active{transform:translateY(-1px) scale(.985)}
+
+/* Mood accent line */
+.dream-card .mood-line{
+  position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;
+}
+
+.dream-card .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dream-card .card-date{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+.dream-card .card-mood{
+  font-size:11px;padding:3px 10px;border-radius:var(--radius-pill);
+  letter-spacing:1px;
+}
+.dream-card .card-title{font-size:clamp(14px, 4vw, 16px);margin-bottom:6px;line-height:1.5}
+.dream-card .card-preview{
+  font-size:clamp(11px, 3vw, 12px);color:var(--text-dim);line-height:1.8;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.dream-card .card-tags{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.dream-card .tag{
+  font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);
+  background:rgba(255,255,255,.05);color:var(--text-muted);letter-spacing:.5px;
+}
+
+/* Mood colors */
+.ml-peaceful{background:var(--teal)}.mc-peaceful{background:rgba(94,234,212,.1);color:var(--teal)}
+.ml-mysterious{background:var(--accent)}.mc-mysterious{background:rgba(167,139,250,.1);color:var(--accent)}
+.ml-warm{background:var(--amber)}.mc-warm{background:rgba(251,191,36,.1);color:var(--amber)}
+.ml-anxious{background:var(--rose)}.mc-anxious{background:rgba(253,164,175,.1);color:var(--rose)}
+.ml-joyful{background:var(--amber)}.mc-joyful{background:rgba(251,191,36,.1);color:var(--amber)}
+.ml-sad{background:var(--sky)}.mc-sad{background:rgba(125,211,252,.1);color:var(--sky)}
+.ml-adventurous{background:var(--orange)}.mc-adventurous{background:rgba(251,146,60,.1);color:var(--orange)}
+.ml-romantic{background:var(--pink)}.mc-romantic{background:rgba(240,171,252,.1);color:var(--pink)}
+.ml-neutral{background:var(--text-dim)}.mc-neutral{background:rgba(255,255,255,.05);color:var(--text-dim)}
+
+/* ====== Empty State ====== */
+.empty{text-align:center;padding:80px 40px}
+.empty .icon{font-size:64px;opacity:.3;display:block;margin-bottom:16px;animation:moonFloat 5s ease-in-out infinite}
+.empty p{font-size:14px;color:var(--text-muted);line-height:2}
+
+/* ====== FAB ====== */
+.fab{
+  position:fixed;bottom:calc(24px + var(--sab));left:50%;transform:translateX(-50%);
+  width:clamp(52px, 14vw, 60px);height:clamp(52px, 14vw, 60px);border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;cursor:pointer;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 24px rgba(167,139,250,.4),0 0 60px rgba(167,139,250,.15);
+  transition:all .35s cubic-bezier(.25,.8,.25,1);
+}
+.fab:hover{transform:translateX(-50%) scale(1.1);box-shadow:0 6px 32px rgba(167,139,250,.5),0 0 80px rgba(167,139,250,.2)}
+.fab:active{transform:translateX(-50%) scale(.95)}
+.fab svg{width:26px;height:26px;transition:transform .35s}
+.fab.open svg{transform:rotate(45deg)}
+/* Ripple on fab */
+.fab .ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.3);transform:scale(0);
+  animation:rippleOut .6s ease-out forwards;pointer-events:none;
+}
+@keyframes rippleOut{to{transform:scale(2.5);opacity:0}}
+
+/* ====== Bottom Sheet ====== */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;
+  opacity:0;pointer-events:none;transition:opacity .35s;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.sheet-overlay.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:520px;
+  background:rgba(18,15,36,.95);
+  border-radius:24px 24px 0 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  z-index:70;padding:0 0 calc(20px + var(--sab));
+  transition:transform .45s cubic-bezier(.32,.72,0,1);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  max-height:92vh;max-height:92dvh;overflow-y:auto;
+}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.sheet-handle{
+  width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);
+  margin:12px auto 6px;
+}
+.sheet-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 24px 14px;
+}
+.sheet-title{font-size:18px;letter-spacing:3px;color:var(--text)}
+.sheet-close{
+  background:none;border:none;color:var(--text-muted);cursor:pointer;
+  padding:8px;border-radius:50%;transition:.2s;font-size:20px;
+}
+.sheet-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.sheet-body{padding:0 24px}
+
+/* Input */
+.input-group{margin-bottom:18px}
+.input-label{
+  font-size:13px;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;
+  display:flex;align-items:center;gap:6px;
+}
+.dream-textarea{
+  width:100%;min-height:140px;border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:16px 18px;font-family:inherit;font-size:15px;line-height:2;
+  color:var(--text);background:rgba(255,255,255,.04);resize:none;outline:none;
+  transition:.3s;
+}
+.dream-textarea:focus{border-color:rgba(167,139,250,.3);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+.dream-textarea::placeholder{color:var(--text-muted)}
+.char-count{text-align:right;font-size:10px;color:var(--text-muted);margin-top:4px}
+
+/* Sheet mood picker */
+.mood-grid{display:flex;gap:6px;flex-wrap:wrap}
+.mood-opt{
+  padding:7px 14px;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  font-size:12px;cursor:pointer;transition:.25s;background:rgba(255,255,255,.03);
+  font-family:inherit;color:var(--text-dim);display:flex;align-items:center;gap:4px;
+}
+.mood-opt:active{transform:scale(.94)}
+.mood-opt.selected{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.4);
+  color:var(--accent);box-shadow:0 0 12px rgba(167,139,250,.15);
+}
+
+/* Action btn */
+.action-btn{
+  width:100%;padding:15px;border:none;border-radius:var(--radius);
+  font-size:15px;font-family:inherit;cursor:pointer;transition:.3s;
+  letter-spacing:3px;margin-top:4px;position:relative;overflow:hidden;
+}
+.action-btn:active{transform:scale(.98)}
+.process-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 4px 20px rgba(167,139,250,.3);
+}
+.process-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.save-btn{
+  background:linear-gradient(135deg,#5eead4,#2dd4bf);color:#0c0a1a;
+  box-shadow:0 4px 20px rgba(94,234,212,.2);margin-top:10px;
+}
+
+/* Result blocks */
+.result-area{display:none;margin-top:18px;animation:slideUp .4s ease}
+.result-area.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.result-block{
+  background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;
+}
+.result-block .rb-title{
+  font-size:13px;color:var(--accent);margin-bottom:8px;letter-spacing:2px;
+  display:flex;align-items:center;gap:6px;
+}
+.result-block .rb-content{font-size:13px;line-height:2;color:var(--text-dim);white-space:pre-wrap}
+.kw-tag{
+  display:inline-block;padding:3px 12px;border-radius:var(--radius-pill);
+  font-size:11px;margin:3px 3px 3px 0;background:rgba(167,139,250,.1);color:var(--accent);
+}
+
+/* ====== Detail Modal ====== */
+.detail-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.detail-overlay.open{opacity:1;pointer-events:auto}
+.detail-panel{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:520px;
+  background:rgba(18,15,36,.96);border-radius:24px 24px 0 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  z-index:90;max-height:90vh;max-height:90dvh;overflow-y:auto;
+  transition:transform .45s cubic-bezier(.32,.72,0,1);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  padding-bottom:calc(20px + var(--sab));
+}
+.detail-panel.open{transform:translateX(-50%) translateY(0)}
+.detail-handle{width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);margin:12px auto 0}
+.detail-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:14px 24px 0;
+}
+.detail-header .dh-left{flex:1}
+.detail-header .dh-title{font-size:20px;line-height:1.5;margin-bottom:4px}
+.detail-header .dh-meta{display:flex;gap:10px;align-items:center}
+.detail-header .dh-date{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+.detail-header .dh-mood{font-size:11px;padding:3px 10px;border-radius:var(--radius-pill)}
+.detail-body{padding:18px 24px 0}
+.detail-body .db-section{margin-bottom:20px}
+.detail-body .db-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;letter-spacing:2px}
+.detail-body .db-text{font-size:14px;line-height:2.2;color:var(--text-dim);white-space:pre-wrap}
+.detail-body .db-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.detail-body .db-tag{
+  padding:4px 12px;border-radius:var(--radius-pill);font-size:11px;
+  background:rgba(167,139,250,.08);color:var(--accent);letter-spacing:.5px;
+}
+.detail-body .divider{
+  width:40px;height:2px;border-radius:2px;margin:10px 0;
+  background:linear-gradient(90deg,var(--accent),transparent);
+}
+.delete-row{text-align:center;padding:20px;display:flex;gap:10px;justify-content:center}
+.delete-btn{
+  background:none;border:1px solid rgba(253,164,175,.3);border-radius:var(--radius-pill);
+  color:var(--rose);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.delete-btn:hover{background:rgba(253,164,175,.08)}
+.delete-btn:active{transform:scale(.96)}
+
+/* ====== Edit Mode in Detail ====== */
+.edit-btn{
+  background:none;border:1px solid rgba(167,139,250,.3);border-radius:var(--radius-pill);
+  color:var(--accent);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.edit-btn:hover{background:rgba(167,139,250,.08)}
+.edit-btn:active{transform:scale(.96)}
+.save-edit-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--radius-pill);
+  color:#fff;font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+  box-shadow:0 2px 12px rgba(167,139,250,.3);
+}
+.save-edit-btn:active{transform:scale(.96)}
+.cancel-edit-btn{
+  background:none;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  color:var(--text-dim);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.cancel-edit-btn:hover{background:rgba(255,255,255,.04)}
+
+/* Edit inputs */
+.edit-title-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(167,139,250,.25);
+  border-radius:var(--radius-sm);padding:10px 14px;font-family:inherit;
+  font-size:18px;color:var(--text);outline:none;transition:.3s;
+}
+.edit-title-input:focus{border-color:rgba(167,139,250,.5);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+.edit-textarea{
+  width:100%;min-height:120px;background:rgba(255,255,255,.04);border:1px solid rgba(167,139,250,.25);
+  border-radius:var(--radius-sm);padding:12px 14px;font-family:inherit;
+  font-size:14px;line-height:2;color:var(--text);outline:none;resize:none;transition:.3s;
+}
+.edit-textarea:focus{border-color:rgba(167,139,250,.5);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+
+/* Edit mood picker */
+.edit-mood-wrap{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.edit-mood-opt{
+  padding:5px 12px;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  font-size:11px;cursor:pointer;transition:.25s;background:rgba(255,255,255,.03);
+  font-family:inherit;color:var(--text-dim);
+}
+.edit-mood-opt:active{transform:scale(.94)}
+.edit-mood-opt.selected{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.4);
+  color:var(--accent);
+}
+
+/* Edit tags */
+.edit-tags-wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.edit-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:var(--radius-pill);font-size:11px;
+  background:rgba(167,139,250,.1);color:var(--accent);letter-spacing:.5px;
+  transition:.2s;
+}
+.edit-tag .tag-remove{
+  cursor:pointer;font-size:14px;line-height:1;opacity:.6;transition:.2s;
+  margin-left:2px;
+}
+.edit-tag .tag-remove:hover{opacity:1;color:var(--rose)}
+.add-tag-input{
+  padding:4px 10px;border:1px dashed rgba(167,139,250,.3);border-radius:var(--radius-pill);
+  font-size:11px;background:transparent;color:var(--accent);outline:none;
+  font-family:inherit;width:80px;transition:.3s;
+}
+.add-tag-input:focus{border-color:var(--accent);width:100px}
+.add-tag-input::placeholder{color:var(--text-muted)}
+
+/* ====== Collapsible Month Groups ====== */
+.month-group{margin-bottom:6px}
+.month-header{
+  display:flex;align-items:center;gap:8px;padding:10px 4px 6px;
+  cursor:pointer;user-select:none;transition:.2s;
+}
+.month-header:active{opacity:.7}
+.month-header .month-arrow{
+  width:18px;height:18px;color:var(--text-muted);transition:transform .3s;flex-shrink:0;
+}
+.month-header.collapsed .month-arrow{transform:rotate(-90deg)}
+.month-header .month-label{
+  font-size:13px;color:var(--text-muted);letter-spacing:2px;flex:1;
+}
+.month-header .month-count{
+  font-size:11px;color:var(--text-muted);padding:2px 8px;
+  border-radius:var(--radius-pill);background:rgba(255,255,255,.04);
+}
+.month-cards{
+  overflow:hidden;transition:max-height .4s cubic-bezier(.25,.8,.25,1), opacity .3s;
+  max-height:5000px;opacity:1;
+}
+.month-cards.collapsed{max-height:0;opacity:0}
+
+/* Collapse all / expand all toggle */
+.list-toggle{
+  display:flex;justify-content:flex-end;padding:0 4px 4px;
+}
+.toggle-all-btn{
+  background:none;border:none;font-size:11px;color:var(--text-muted);
+  cursor:pointer;font-family:inherit;letter-spacing:1px;padding:4px 8px;
+  border-radius:var(--radius-pill);transition:.2s;
+}
+.toggle-all-btn:hover{background:rgba(255,255,255,.04);color:var(--accent)}
+.toggle-all-btn:active{transform:scale(.96)}
+
+/* Loading dots */
+.dots{display:inline-flex;gap:4px;align-items:center;vertical-align:middle}
+.dots span{width:5px;height:5px;border-radius:50%;background:#fff;animation:dotPulse 1.2s ease infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(.7)}40%{opacity:1;transform:scale(1.2)}}
+
+/* Scroll */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+/* Toast */
+.toast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);
+  background:rgba(167,139,250,.9);color:#fff;
+  padding:12px 28px;border-radius:var(--radius-pill);
+  font-size:14px;letter-spacing:2px;z-index:200;
+  opacity:0;pointer-events:none;
+  transition:all .35s cubic-bezier(.25,.8,.25,1);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* touch card swipe-to-delete */
+.dream-card .swipe-hint{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:11px;color:var(--rose);opacity:0;transition:opacity .2s;
+  letter-spacing:1px;pointer-events:none;
+}
+.dream-card.swiping .swipe-hint{opacity:1}
+
+/* ====== Responsive: small phones (SE / 320px) ====== */
+@media(max-width:360px){
+  .header{padding:calc(16px + var(--sat)) 16px 14px}
+  .stats-bar{padding:4px 12px 8px;gap:6px}
+  .stat-chip{padding:8px 6px}
+  .search-wrap{padding:0 12px 6px}
+  .mood-filter{padding:6px 12px;gap:4px}
+  .mood-chip{padding:5px 10px;font-size:11px}
+  .dream-list{padding:6px 10px calc(110px + var(--sab))}
+  .dream-card{padding:14px 14px 12px;margin-bottom:10px;border-radius:16px}
+  .sheet-body{padding:0 16px}
+  .sheet-header{padding:8px 16px 12px}
+  .detail-header{padding:12px 16px 0}
+  .detail-body{padding:14px 16px 0}
+}
+
+/* ====== Responsive: large phones / small tablets ====== */
+@media(min-width:520px){
+  .app{max-width:520px}
+  .dream-card{padding:22px 24px 20px}
+  .stats-bar{gap:12px;padding:4px 24px 12px}
+  .search-wrap{padding:0 24px 8px}
+  .mood-filter{padding:10px 24px}
+  .dream-list{padding:10px 20px calc(130px + var(--sab))}
+}
+
+/* ====== Responsive: tablets (iPad etc) ====== */
+@media(min-width:768px){
+  .app{max-width:600px}
+  .header{padding:calc(30px + var(--sat)) 32px 24px}
+  .dream-card{border-radius:24px}
+  .fab{width:64px;height:64px}
+  .sheet,.detail-panel{max-width:600px;border-radius:28px 28px 0 0}
+}
+
+/* ====== Landscape orientation ====== */
+@media(orientation:landscape) and (max-height:500px){
+  .header{padding:calc(8px + var(--sat)) 24px 8px}
+  .header .moon{font-size:36px}
+  .header h1{font-size:18px}
+  .header .sub{display:none}
+  .stats-bar{padding:2px 20px 6px}
+  .stat-chip{padding:6px 8px}
+  .stat-chip .num{font-size:16px}
+  .sheet{max-height:96vh;max-height:96dvh}
+  .detail-panel{max-height:96vh;max-height:96dvh}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-glow"></div>
+    <span class="moon">&#127769;</span>
+    <h1>梦境日记</h1>
+    <div class="sub">记录夜晚的每一个故事</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="搜索梦境...">
+    </div>
+  </div>
+
+  <!-- Mood Filter -->
+  <div class="mood-filter" id="moodFilter"></div>
+
+  <!-- Dream List -->
+  <div class="dream-list" id="dreamList"></div>
+  <div class="empty" id="emptyState" style="display:none">
+    <span class="icon">&#9729;&#65039;</span>
+    <p>还没有记录任何梦境<br>点击下方按钮开始记录吧</p>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="openSheet()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<!-- Bottom Sheet (Record) -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">&#10024; 记录梦境</span>
+    <button class="sheet-close" onclick="closeSheet()">&times;</button>
+  </div>
+  <div class="sheet-body">
+    <div class="input-group">
+      <div class="input-label">&#9997;&#65039; 口述你的梦境</div>
+      <textarea class="dream-textarea" id="dreamInput" placeholder="闭上眼睛回忆一下~ 把梦里的画面用文字描述出来..."></textarea>
+      <div class="char-count"><span id="charCount">0</span> 字</div>
+    </div>
+    <div class="input-group">
+      <div class="input-label">&#127752; 梦境的感觉</div>
+      <div class="mood-grid" id="moodPicker"></div>
+    </div>
+    <button class="action-btn process-btn" id="processBtn" onclick="processDream()">&#10024; 整理梦境</button>
+    <div class="result-area" id="resultArea">
+      <div class="result-block">
+        <div class="rb-title">&#128221; 整理后的梦境</div>
+        <div class="rb-content" id="tidiedContent"></div>
+      </div>
+      <div class="result-block">
+        <div class="rb-title">&#128300; 梦境小分析</div>
+        <div class="rb-content" id="analysisContent"></div>
+      </div>
+      <div class="result-block" id="kwBlock">
+        <div class="rb-title">&#127793; 关键意象</div>
+        <div id="kwContent"></div>
+      </div>
+      <button class="action-btn save-btn" onclick="saveDream()">&#128151; 保存这个梦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-handle"></div>
+  <div class="detail-header" id="detailHeader"></div>
+  <div class="detail-body" id="detailBody"></div>
+  <div class="delete-row" id="actionRow"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========================================
+// Storage
+// ========================================
+const SK='dreamJournal';
+function loadDreams(){try{return JSON.parse(localStorage.getItem(SK)||'[]')}catch{return[]}}
+function saveDreams(d){localStorage.setItem(SK,JSON.stringify(d))}
+
+// ========================================
+// State
+// ========================================
+let currentMood='',currentProcessed=null,filterMood='',searchQuery='';
+
+// ========================================
+// Mood config
+// ========================================
+const moods=[
+  {key:'peaceful',emoji:'🍃',label:'平静',full:'平静安宁'},
+  {key:'mysterious',emoji:'🔮',label:'奇幻',full:'神秘奇幻'},
+  {key:'warm',emoji:'☀️',label:'温暖',full:'温暖美好'},
+  {key:'anxious',emoji:'🌊',label:'不安',full:'紧张不安'},
+  {key:'joyful',emoji:'🎉',label:'欢乐',full:'开心欢乐'},
+  {key:'sad',emoji:'🌧️',label:'感怀',full:'忧伤感怀'},
+  {key:'adventurous',emoji:'🌍',label:'冒险',full:'冒险刺激'},
+  {key:'romantic',emoji:'🌹',label:'甜蜜',full:'浪漫甜蜜'},
+  {key:'neutral',emoji:'💬',label:'朦胧',full:'说不清楚'},
+];
+const moodMap=Object.fromEntries(moods.map(m=>[m.key,m]));
+
+// ========================================
+// Date helpers
+// ========================================
+function fmtDate(ts){
+  const d=new Date(ts),w=['日','一','二','三','四','五','六'];
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 星期${w[d.getDay()]}`;
+}
+function fmtShort(ts){
+  const d=new Date(ts);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtRelative(ts){
+  const diff=Date.now()-ts,m=60000,h=3600000,day=86400000;
+  if(diff<m) return '刚刚';
+  if(diff<h) return Math.floor(diff/m)+'分钟前';
+  if(diff<day) return Math.floor(diff/h)+'小时前';
+  if(diff<day*2) return '昨天';
+  if(diff<day*7) return Math.floor(diff/day)+'天前';
+  return fmtShort(ts);
+}
+
+// ========================================
+// Canvas Background — particles
+// ========================================
+function initBg(){
+  const c=document.getElementById('bgCanvas'),ctx=c.getContext('2d');
+  let W,H,dpr;
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1, 2); // cap at 2x to save perf
+    W=innerWidth;H=innerHeight;
+    c.width=W*dpr;c.height=H*dpr;
+    c.style.width=W+'px';c.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();window.addEventListener('resize',resize);
+
+  // Adaptive particle count based on screen size
+  const area=screen.width*screen.height;
+  const starCount=Math.max(40, Math.min(120, Math.round(area/12000)));
+  const flyCount=Math.max(6, Math.min(18, Math.round(area/60000)));
+
+  // Stars
+  const stars=Array.from({length:starCount},()=>({
+    x:Math.random()*4000,y:Math.random()*4000,
+    r:.3+Math.random()*1.2,
+    a:Math.random()*6.28,
+    speed:.002+Math.random()*.005,
+    bright:.2+Math.random()*.5,
+    color:`hsla(${250+Math.random()*40},60%,80%,`
+  }));
+
+  // Fireflies
+  const flies=Array.from({length:flyCount},()=>({
+    x:Math.random()*4000,y:Math.random()*4000,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+    r:1.5+Math.random()*2,
+    phase:Math.random()*6.28,
+    color:Math.random()>.5?'167,139,250':'240,171,252'
+  }));
+
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+
+    // Stars
+    stars.forEach(s=>{
+      s.a+=s.speed;
+      const bright=s.bright*(0.5+0.5*Math.sin(s.a));
+      ctx.beginPath();
+      ctx.arc(s.x%W,s.y%H,s.r,0,6.28);
+      ctx.fillStyle=s.color+bright+')';
+      ctx.fill();
+    });
+
+    // Fireflies
+    flies.forEach(f=>{
+      f.x+=f.vx; f.y+=f.vy;
+      f.phase+=.02;
+      if(f.x<0||f.x>W)f.vx*=-1;
+      if(f.y<0||f.y>H)f.vy*=-1;
+      const glow=.3+.7*(.5+.5*Math.sin(f.phase));
+      ctx.beginPath();
+      ctx.arc(f.x,f.y,f.r,0,6.28);
+      const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*4);
+      g.addColorStop(0,`rgba(${f.color},${glow*.6})`);
+      g.addColorStop(1,`rgba(${f.color},0)`);
+      ctx.fillStyle=g;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+
+// ========================================
+// Render stats
+// ========================================
+function renderStats(){
+  const dreams=loadDreams();
+  const now=new Date(),thisMonth=dreams.filter(d=>{const dd=new Date(d.timestamp);return dd.getMonth()===now.getMonth()&&dd.getFullYear()===now.getFullYear()});
+  const moodSet=new Set(dreams.map(d=>d.mood||'neutral'));
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-chip"><div class="num">${dreams.length}</div><div class="label">全部梦境</div></div>
+    <div class="stat-chip"><div class="num">${thisMonth.length}</div><div class="label">本月记录</div></div>
+    <div class="stat-chip"><div class="num">${moodSet.size}</div><div class="label">情绪种类</div></div>
+  `;
+}
+
+// ========================================
+// Mood filter chips
+// ========================================
+function renderMoodFilter(){
+  const el=document.getElementById('moodFilter');
+  let html=`<button class="mood-chip ${filterMood===''?'active':''}" onclick="setFilter('')">全部</button>`;
+  moods.forEach(m=>{
+    html+=`<button class="mood-chip ${filterMood===m.key?'active':''}" onclick="setFilter('${m.key}')">${m.emoji} ${m.label}</button>`;
+  });
+  el.innerHTML=html;
+}
+function setFilter(m){
+  filterMood=m;
+  renderMoodFilter();
+  renderList();
+}
+
+// ========================================
+// Collapsed months state
+// ========================================
+let collapsedMonths={}; // key: "2026-04", value: true/false
+try{collapsedMonths=JSON.parse(localStorage.getItem('dreamCollapsed')||'{}');}catch{}
+function saveCollapsed(){localStorage.setItem('dreamCollapsed',JSON.stringify(collapsedMonths))}
+
+// ========================================
+// Render dream list (grouped by month, collapsible)
+// ========================================
+function renderList(){
+  const all=loadDreams(), list=document.getElementById('dreamList'), empty=document.getElementById('emptyState');
+  let dreams=[...all];
+
+  // Filter by mood
+  if(filterMood) dreams=dreams.filter(d=>(d.mood||'neutral')===filterMood);
+  // Filter by search
+  if(searchQuery){
+    const q=searchQuery.toLowerCase();
+    dreams=dreams.filter(d=>(d.title||'').toLowerCase().includes(q)||(d.tidied||'').toLowerCase().includes(q)||(d.raw||'').toLowerCase().includes(q)||(d.keywords||[]).some(k=>k.toLowerCase().includes(q)));
+  }
+
+  if(all.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+
+  if(dreams.length===0){
+    list.innerHTML='<div style="text-align:center;padding:50px;color:var(--text-muted);font-size:13px">没有找到匹配的梦境</div>';
+    return;
+  }
+
+  // Group by month
+  const groups={};
+  dreams.forEach(d=>{
+    const dt=new Date(d.timestamp);
+    const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    if(!groups[key])groups[key]={label:`${dt.getFullYear()}年${dt.getMonth()+1}月`,dreams:[]};
+    groups[key].dreams.push(d);
+  });
+
+  const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const allCollapsed=sortedKeys.length>0 && sortedKeys.every(k=>collapsedMonths[k]);
+
+  let html='';
+  // Toggle all button (only show when >1 month or many dreams)
+  if(sortedKeys.length>1 || dreams.length>5){
+    html+=`<div class="list-toggle">
+      <button class="toggle-all-btn" onclick="toggleAllMonths()">${allCollapsed?'展开全部':'收起全部'}</button>
+    </div>`;
+  }
+
+  sortedKeys.forEach(key=>{
+    const g=groups[key];
+    const isCollapsed=!!collapsedMonths[key];
+    html+=`<div class="month-group">
+      <div class="month-header${isCollapsed?' collapsed':''}" onclick="toggleMonth('${key}')">
+        <svg class="month-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        <span class="month-label">${g.label}</span>
+        <span class="month-count">${g.dreams.length} 篇</span>
+      </div>
+      <div class="month-cards${isCollapsed?' collapsed':''}">`;
+
+    g.dreams.forEach(d=>{
+      const idx=all.indexOf(d);
+      const m=d.mood||'neutral';
+      const mi=moodMap[m]||moodMap.neutral;
+      const tags=(d.keywords||[]).slice(0,3);
+      html+=`<div class="dream-card" data-idx="${idx}" onclick="openDetail(${idx})" ontouchstart="tStart(event,this)" ontouchmove="tMove(event,this)" ontouchend="tEnd(event,this)">
+        <div class="mood-line ml-${m}"></div>
+        <div class="card-top">
+          <span class="card-date">${fmtRelative(d.timestamp)}</span>
+          <span class="card-mood mc-${m}">${mi.emoji} ${mi.label}</span>
+        </div>
+        <div class="card-title">${esc(d.title||'无题之梦')}</div>
+        <div class="card-preview">${esc(d.tidied||d.raw||'')}</div>
+        ${tags.length?`<div class="card-tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+        <span class="swipe-hint">← 左滑删除</span>
+      </div>`;
+    });
+
+    html+=`</div></div>`;
+  });
+
+  list.innerHTML=html;
+}
+
+function toggleMonth(key){
+  collapsedMonths[key]=!collapsedMonths[key];
+  saveCollapsed();
+  renderList();
+}
+
+function toggleAllMonths(){
+  const all=loadDreams();
+  // Compute current month keys
+  const keys=new Set();
+  all.forEach(d=>{
+    const dt=new Date(d.timestamp);
+    keys.add(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`);
+  });
+  const allCollapsed=[...keys].every(k=>collapsedMonths[k]);
+  keys.forEach(k=>{collapsedMonths[k]=!allCollapsed});
+  saveCollapsed();
+  renderList();
+}
+
+// ========================================
+// Touch swipe-to-delete on cards
+// ========================================
+let touchStartX=0,touchCard=null,swiping=false;
+function tStart(e,el){touchStartX=e.touches[0].clientX;touchCard=el;swiping=false;el.style.transition='none'}
+function tMove(e,el){
+  if(!touchCard)return;
+  const dx=e.touches[0].clientX-touchStartX;
+  if(dx<-10){swiping=true;el.classList.add('swiping');el.style.transform=`translateX(${Math.max(dx,-120)}px)`;e.preventDefault()}
+}
+function tEnd(e,el){
+  if(!touchCard)return;
+  el.style.transition='transform .3s';
+  if(swiping){
+    const rect=el.getBoundingClientRect();
+    const dx=parseFloat(el.style.transform.replace(/[^-\d.]/g,''))||0;
+    if(dx<-80){
+      const idx=parseInt(el.dataset.idx);
+      el.style.transform='translateX(-100%)';
+      el.style.opacity='0';
+      setTimeout(()=>{deleteDream(idx)},300);
+    } else {
+      el.style.transform='translateX(0)';el.classList.remove('swiping');
+    }
+  } else {
+    el.style.transform='translateX(0)';el.classList.remove('swiping');
+  }
+  touchCard=null;swiping=false;
+}
+
+// ========================================
+// Sheet (record panel)
+// ========================================
+function openSheet(){
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('fabBtn').classList.add('open');
+  resetSheet();
+}
+function closeSheet(){
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('fabBtn').classList.remove('open');
+}
+function resetSheet(){
+  document.getElementById('dreamInput').value='';
+  document.getElementById('charCount').textContent='0';
+  document.getElementById('resultArea').classList.remove('show');
+  const btn=document.getElementById('processBtn');
+  btn.disabled=false;btn.innerHTML='&#10024; 整理梦境';
+  currentMood='';currentProcessed=null;
+  document.querySelectorAll('.mood-opt').forEach(b=>b.classList.remove('selected'));
+}
+
+// ========================================
+// Detail panel (view + edit mode)
+// ========================================
+let editingIdx=-1, editMode=false;
+
+function openDetail(idx){
+  editingIdx=idx;editMode=false;
+  renderDetail();
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function renderDetail(){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+  const m=d.mood||'neutral',mi=moodMap[m]||moodMap.neutral;
+
+  if(editMode){
+    // === EDIT MODE ===
+    document.getElementById('detailHeader').innerHTML=`
+      <div class="dh-left">
+        <input class="edit-title-input" id="editTitle" value="${esc(d.title||'')}" placeholder="梦境标题...">
+      </div>`;
+
+    let body=`
+      <div class="db-section">
+        <div class="db-label">&#128221; 梦境内容</div>
+        <textarea class="edit-textarea" id="editContent">${esc(d.tidied||d.raw||'')}</textarea>
+      </div>
+      <div class="db-section">
+        <div class="db-label">&#127752; 情绪</div>
+        <div class="edit-mood-wrap" id="editMoodPicker">
+          ${moods.map(mo=>`<button class="edit-mood-opt${m===mo.key?' selected':''}" data-mood="${mo.key}" onclick="pickEditMood(this)">${mo.emoji} ${mo.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="db-section">
+        <div class="db-label">&#127793; 标签</div>
+        <div class="edit-tags-wrap" id="editTagsWrap">
+          ${(d.keywords||[]).map((k,i)=>`<span class="edit-tag">${esc(k)}<span class="tag-remove" onclick="removeEditTag(${i})">&times;</span></span>`).join('')}
+          <input class="add-tag-input" id="addTagInput" placeholder="+ 标签" onkeydown="addTagKey(event)">
+        </div>
+      </div>`;
+
+    if(d.analysis){
+      body+=`<div class="divider"></div>
+        <div class="db-section"><div class="db-label">&#128300; 梦境分析</div>
+        <textarea class="edit-textarea" id="editAnalysis" style="min-height:80px">${esc(d.analysis)}</textarea></div>`;
+    }
+    document.getElementById('detailBody').innerHTML=body;
+    document.getElementById('actionRow').innerHTML=`
+      <button class="save-edit-btn" onclick="saveEdit()">&#10003; 保存修改</button>
+      <button class="cancel-edit-btn" onclick="cancelEdit()">取消</button>`;
+  } else {
+    // === VIEW MODE ===
+    document.getElementById('detailHeader').innerHTML=`
+      <div class="dh-left">
+        <div class="dh-title">${esc(d.title||'无题之梦')}</div>
+        <div class="dh-meta">
+          <span class="dh-mood mc-${m}">${mi.emoji} ${mi.full}</span>
+          <span class="dh-date">${fmtDate(new Date(d.timestamp))}</span>
+        </div>
+      </div>`;
+
+    let body=`<div class="db-section"><div class="db-text">${esc(d.tidied||d.raw)}</div></div>`;
+    if(d.analysis){
+      body+=`<div class="divider"></div>
+        <div class="db-section"><div class="db-label">&#128300; 梦境分析</div><div class="db-text">${esc(d.analysis)}</div></div>`;
+    }
+    if(d.keywords&&d.keywords.length){
+      body+=`<div class="db-tags">${d.keywords.map(k=>`<span class="db-tag">${esc(k)}</span>`).join('')}</div>`;
+    }
+    document.getElementById('detailBody').innerHTML=body;
+    document.getElementById('actionRow').innerHTML=`
+      <button class="edit-btn" onclick="enterEdit()">&#9998; 编辑</button>
+      <button class="delete-btn" onclick="deleteDream(${editingIdx})">删除</button>`;
+  }
+}
+
+function enterEdit(){editMode=true;renderDetail();document.getElementById('detailPanel').scrollTo({top:0,behavior:'smooth'})}
+function cancelEdit(){editMode=false;renderDetail()}
+
+// Edit mood picker
+let editMoodVal='';
+function pickEditMood(el){
+  document.querySelectorAll('.edit-mood-opt').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  editMoodVal=el.dataset.mood;
+}
+
+// Edit tags
+function removeEditTag(i){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d||!d.keywords)return;
+  d.keywords.splice(i,1);
+  saveDreams(dreams);
+  renderDetail();
+}
+
+function addTagKey(e){
+  if(e.key!=='Enter')return;
+  const inp=document.getElementById('addTagInput');
+  const val=inp.value.trim();
+  if(!val)return;
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+  if(!d.keywords)d.keywords=[];
+  if(!d.keywords.includes(val)){
+    d.keywords.push(val);
+    saveDreams(dreams);
+  }
+  renderDetail();
+  // Re-focus the input
+  setTimeout(()=>{const ni=document.getElementById('addTagInput');if(ni)ni.focus()},50);
+}
+
+// Save edit
+function saveEdit(){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+
+  const titleEl=document.getElementById('editTitle');
+  const contentEl=document.getElementById('editContent');
+  const analysisEl=document.getElementById('editAnalysis');
+
+  if(titleEl) d.title=titleEl.value.trim()||d.title;
+  if(contentEl){d.tidied=contentEl.value.trim();if(!d.raw)d.raw=d.tidied;}
+  if(analysisEl) d.analysis=analysisEl.value.trim();
+
+  // Mood
+  const selectedMood=document.querySelector('.edit-mood-opt.selected');
+  if(selectedMood) d.mood=selectedMood.dataset.mood;
+
+  saveDreams(dreams);
+  editMode=false;
+  renderDetail();
+  renderStats();
+  renderList();
+  showToast('修改已保存');
+}
+function closeDetail(){
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  editingIdx=-1;editMode=false;
+}
+
+function deleteDream(idx){
+  const dreams=loadDreams();dreams.splice(idx,1);saveDreams(dreams);
+  closeDetail();renderStats();renderList();
+  showToast('已删除');
+  editingIdx=-1;editMode=false;
+}
+
+// ========================================
+// Toast
+// ========================================
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+// ========================================
+// Process & Save dream
+// ========================================
+function processDream(){
+  const raw=document.getElementById('dreamInput').value.trim();
+  if(!raw){showToast('请先描述你的梦境');return}
+  const btn=document.getElementById('processBtn');
+  btn.disabled=true;btn.innerHTML='正在整理 <span class="dots"><span></span><span></span><span></span></span>';
+  setTimeout(()=>{
+    const result=analyzeDream(raw,currentMood);
+    currentProcessed=result;
+    document.getElementById('tidiedContent').textContent=result.tidied;
+    document.getElementById('analysisContent').textContent=result.analysis;
+    document.getElementById('kwContent').innerHTML=result.keywords.map(k=>`<span class="kw-tag">${esc(k)}</span>`).join('');
+    document.getElementById('resultArea').classList.add('show');
+    btn.innerHTML='&#10024; 重新整理';btn.disabled=false;
+    // Scroll sheet to show results
+    document.getElementById('sheet').scrollTo({top:999,behavior:'smooth'});
+  },1000);
+}
+
+function saveDream(){
+  if(!currentProcessed)return;
+  const raw=document.getElementById('dreamInput').value.trim();
+  const dreams=loadDreams();
+  dreams.unshift({
+    id:Date.now(),timestamp:Date.now(),raw,
+    tidied:currentProcessed.tidied,analysis:currentProcessed.analysis,
+    keywords:currentProcessed.keywords,title:currentProcessed.title,
+    mood:currentMood||'neutral',
+  });
+  saveDreams(dreams);
+  closeSheet();renderStats();renderList();
+  showToast('梦境已保存 ✨');
+}
+
+// ========================================
+// Dream Analysis Engine (kept intact)
+// ========================================
+function analyzeDream(raw,mood){
+  const tidied=tidyText(raw),keywords=extractSymbols(raw),analysis=genAnalysis(raw,mood,keywords),title=genTitle(raw,keywords);
+  return{tidied,analysis,keywords,title};
+}
+function tidyText(raw){
+  let t=raw.trim();
+  t=t.replace(/\.{3,}/g,'……').replace(/。{2,}/g,'。').replace(/,{2,}/g,'，').replace(/!{2,}/g,'！').replace(/\?{2,}/g,'？');
+  const ss=t.split(/(?<=[。！？…\n])/g).map(s=>s.trim()).filter(Boolean);
+  if(ss.length<=1)return t;
+  const shifts=['然后','后来','突然','接着','忽然','这时','之后','最后','可是','但是','不知道为什么','醒来','再后来','紧接着','结果','没想到','等我'];
+  const p=[];let cur=[];
+  ss.forEach(s=>{
+    const isS=shifts.some(w=>s.startsWith(w));
+    if(isS&&cur.length>=2){p.push(cur.join(''));cur=[s]}
+    else{cur.push(s);if(cur.length>=4){p.push(cur.join(''));cur=[]}}
+  });
+  if(cur.length)p.push(cur.join(''));
+  return p.join('\n\n');
+}
+
+function extractSymbols(text){
+  const sm={
+    '水':['水','海','河','湖','雨','泳','溪','浪','洪','潮','瀑布','池塘','泉','井','游泳','潜水','漂流','洗澡','淹','溺'],
+    '飞行':['飞','天空','翅膀','翱翔','漂浮','悬浮','飘','升空','降落伞','气球','风筝'],
+    '坠落':['掉','坠','摔','掉落','下坠','深渊','悬崖','跌','滑落'],
+    '追逐':['追','逃','跑','躲','赶','追赶','逃跑','奔跑','躲藏','被追'],
+    '房屋':['房','屋','楼','家','门','窗','房间','走廊','楼梯','阁楼','地下室','卧室','厨房','客厅','阳台','天台','屋顶'],
+    '动物':['猫','狗','鸟','蛇','鱼','马','兔','狼','虎','龙','蝴蝶','鹿','熊','猴','鹰','乌鸦','老鼠','蜘蛛','蚂蚁','狐狸','鲸','海豚','企鹅','猫头鹰','金鱼','乌龟'],
+    '花草':['花','树','草','森林','叶','花园','植物','玫瑰','樱花','荷花','向日葵','竹','藤','蘑菇','种子','果实','开花','枯萎','落叶'],
+    '道路':['路','桥','隧道','十字路口','小径','迷宫','街道','小巷','大道','铁轨','山路','栈道','台阶'],
+    '光与暗':['光','暗','黑暗','阳光','月光','星光','灯','影子','烛光','彩虹','日出','日落','黎明','黄昏','火焰','萤火虫','霓虹'],
+    '人物':['朋友','家人','同学','陌生人','老师','孩子','老人','妈妈','爸爸','爷爷','奶奶','哥哥','姐姐','弟弟','妹妹','婴儿','小孩','恋人','前任','同事','邻居'],
+    '食物':['吃','食物','饭','水果','蛋糕','面包','糖果','巧克力','冰淇淋','菜','做饭','烹饪','餐厅','甜品','奶茶','咖啡','酒'],
+    '考试':['考试','作业','上学','学校','教室','迟到','课','老师','成绩','毕业','高考','答题','铃声','课桌'],
+    '镜子':['镜','倒影','镜子','玻璃','反射','照镜子'],
+    '钥匙':['钥匙','锁','开门','上锁','密码','打不开','关门'],
+    '时钟':['钟','时间','手表','闹钟','指针','来不及','赶时间','过去','未来'],
+    '山':['山','爬山','山顶','山谷','悬崖','高处','山洞','山峰','登顶'],
+    '天气':['风','雪','雷','闪电','暴风雨','云','雾','冰','霜','台风','龙卷风','天晴','阴天','彩虹'],
+    '交通':['车','火车','飞机','船','自行车','地铁','公交','出租车','高铁','开车','坐车','骑车','堵车','高速'],
+    '衣物':['衣服','裙子','鞋','帽子','穿','换衣','裸','制服','校服','婚纱','西装'],
+    '颜色':['红','蓝','白','黑','绿','紫','金','银','粉','彩色','透明'],
+    '音乐':['歌','唱','音乐','钢琴','吉他','乐器','旋律','声音','铃声','鼓','小提琴','跳舞','舞蹈'],
+    '书信':['信','书','笔记','日记','纸','写字','文字','消息','手机','电话','短信','微信'],
+    '战斗':['打','打架','武器','刀','剑','枪','战争','格斗','对抗','攻击','防御','拳头','盔甲'],
+    '迷失':['迷路','找不到','失去','消失','不见了','丢','忘记','找','寻找','走丢'],
+    '海洋':['大海','海边','沙滩','贝壳','海浪','潜水','海底','珊瑚','海岛','灯塔'],
+    '星空':['星星','月亮','宇宙','银河','太阳','星座','流星','北极光','星球','外太空','UFO','飞碟','外星人'],
+    '城堡':['城堡','宫殿','王国','城墙','塔','古堡','王座','皇冠','公主','王子'],
+    '医院':['医院','医生','护士','生病','药','打针','手术','病房','急救','受伤','伤口','出血'],
+    '电梯':['电梯','上升','下降','楼层','按钮','卡住','失控','升降'],
+    '牙齿':['牙','牙齿','掉牙','拔牙','牙痛'],
+    '裸露':['裸','没穿衣服','光着','赤裸','暴露','走光','尴尬'],
+    '婚礼':['结婚','婚礼','婚纱','新娘','新郎','戒指','求婚','喜宴'],
+    '死亡':['死','去世','葬礼','坟墓','灵魂','鬼','幽灵','复活','棺材','墓地'],
+    '宝藏':['宝藏','金子','珠宝','宝石','宝箱','藏宝','财富','发财','钱','金币','金银'],
+    '地图':['地图','指南针','方向','东南西北','导航','目的地','旅行','出发'],
+    '童年':['小时候','童年','玩具','游乐场','滑梯','秋千','幼儿园','棒棒糖','卡通','动画片','回到过去'],
+    '飞船':['飞船','太空','宇航员','火箭','空间站','失重','漂浮在太空'],
+    '图书馆':['图书馆','书架','书','阅读','古书','藏书','翻书','借书'],
+    '迟到':['迟到','赶','来不及','错过','赶不上','紧张','着急'],
+    '变形':['变成','变形','变大','变小','变身','缩小','巨大','变化','长出'],
+    '隐身':['隐身','看不见','透明','穿墙','消失','隐形','无人注意'],
+  };
+  const found=[];
+  for(const[s,ts]of Object.entries(sm)){if(ts.some(t=>text.includes(t)))found.push(s)}
+  return found.length?found.slice(0,7):['碎片记忆'];
+}
+
+function genAnalysis(text,mood,kw){
+  const mp={
+    peaceful:['这个梦的基调是平静安宁的，像湖面上没有一丝波纹。这可能反映了你内心深处对宁静的向往，也许最近你正在慢慢找到一种内在的平衡。','平静的梦境是一份来自潜意识的礼物，说明你心里有一块柔软安全的地方。好好珍惜这种感觉，它是你面对忙碌日常的力量来源。','梦到平静的场景，通常意味着你正在消化和整合最近的经历。你的内心正在自我修复，像深夜里安静生长的植物。'],
+    mysterious:['梦境带有神秘的色彩，像是潜意识在给你讲一个只有你能听懂的故事。这类梦往往藏着你还没有觉察到的直觉和灵感。','神秘的梦是内心好奇心的投射。也许最近你对某件事有一种说不清的预感，或者正在探索一些全新的可能性。','带有奇幻色彩的梦说明你的想象力正处于活跃期，你的大脑在用一种独特的方式处理信息。试着把这种创造力带到白天的生活中。'],
+    warm:['温暖的梦境像是一杯热可可，连接着你内心最柔软的部分。可能是对某段珍贵关系的眷恋，也可能是你正在给自己一些久违的善意。','梦到温暖的场景，说明你的内心正在被某种爱和归属感滋养着。即使现实中偶尔感到孤单，你的潜意识知道你并不孤独。','这种暖意来自你内心深处的情感储备。你是一个能够感受到美好的人，而这个梦正在提醒你，那些让你心暖的东西一直都在。'],
+    anxious:['带有紧张感的梦境其实非常常见。它更像是大脑的一次压力测试，在安全的梦境里提前演练可能遇到的挑战。不必太担心，醒来就好了。','焦虑的梦通常是日常压力的一种释放方式。与其说梦在警告你，不如说它在帮你把白天积攒的紧张情绪排出体外。','如果最近你感到有些焦虑，这个梦可能是在帮你处理这些情绪。试着在白天给自己一些放松的时间，让身心都有喘息的空间。'],
+    joyful:['开心的梦境是你内心喜悦的延伸！说明即使在睡着的时候，你的心灵也在微笑。这份快乐的能量可以带到明天的生活中去。','梦到欢乐的场景，通常和你最近经历的小确幸有关。也许是一件不起眼的好事，被你的潜意识放大成了一场盛大的庆祝。','欢乐的梦是心理健康的好信号。你的内心有充足的正能量储备，能够让你在梦里也保持愉快。继续保持这种积极的生活态度吧。'],
+    sad:['忧伤的梦并不是坏事，它是你内心在安全地表达和释放某些深层的情感。有些白天没机会流的泪，会在梦里悄悄替你流出来。','梦到忧伤的场景，可能是你正在消化某段经历或者思念某个人。给自己一点温柔的时间，不着急把所有情绪都整理好。','感怀的梦通常和怀旧有关。也许你在想念某个再也回不去的时光，而这份思念本身就说明，那段记忆对你很重要。'],
+    adventurous:['冒险的梦说明你骨子里有一颗不安分的心！你可能正渴望打破某种日常的平淡，去尝试一些新的、刺激的事情。','梦里的冒险往往是内心勇气的投射。也许你正站在一个选择的路口，而潜意识在告诉你：你比自己以为的更勇敢。','刺激的梦境说明你的大脑正在活跃地处理信息，渴望探索和突破。这种内在的驱动力是很珍贵的，可以思考如何在现实中给自己一些新鲜感。'],
+    romantic:['甜蜜的梦境说明你内心正渴望亲密和连接。不论现实中的感情状态如何，你的心灵都在表达对爱的向往和珍视。','浪漫的梦通常和你对理想关系的想象有关。它可能不是指向某个具体的人，而是你内心深处对被爱和被理解的渴望。','梦到温柔浪漫的场景，说明你是一个内心充满柔情的人。这种柔软是一种力量，它让你能感受到生活中细腻的美好。'],
+    neutral:['说不清感觉的梦反而很耐人寻味。它可能混合了很多种情绪，就像一杯调味复杂的饮品，每一口的味道都不太一样。慢慢品味就好。','模糊的梦境情绪说明你的潜意识正在处理比较复杂的信息。不需要急着给它下定义，有时候最好的理解方式就是让它沉淀一段时间。','这种朦胧的感觉其实很有价值。它说明你的梦境包含了多个层次的信息，每个层次都在从不同角度和你对话。'],
+  };
+  const sp={
+    '水':['水在梦中代表情绪和潜意识的流动。平静的水面暗示内心安宁，汹涌的水则可能是未被表达的情感在涌动。'],
+    '飞行':['飞行是最令人向往的梦境之一，通常象征着自由和超越。你可能渴望从某种束缚中解脱。'],
+    '坠落':['坠落梦是全世界最常见的梦境之一。它通常和某种失控感有关。'],
+    '追逐':['被追逐的梦暗示你可能在回避某个问题或情绪。那个追你的东西，往往代表着你不太想面对的事情。'],
+    '房屋':['房屋在梦中常常象征着"自我"。不同的房间代表你性格的不同面向。'],
+    '动物':['梦中的动物通常代表你的本能和直觉。不同的动物有不同的寓意。'],
+    '花草':['植物象征着成长和生命力。梦见花开可能暗示你正处在一个新的成长阶段。'],
+    '道路':['道路代表人生方向和选择。分岔路口可能意味着你正面临一个决定。'],
+    '光与暗':['光和暗的交替常常代表意识与潜意识的对话。梦见光明通常是希望和觉醒的象征。'],
+    '人物':['梦中的人物不一定代表他们本人，更可能是你自身某个特质的投射。'],
+    '食物':['食物与滋养和满足感有关。梦见丰盛的食物可能反映了你对某种需求的渴望。'],
+    '考试':['考试梦反映的不是对考试本身的恐惧，而是对"被评价"的担心。'],
+    '镜子':['镜子象征着自我认知和审视。你可能正在思考"我是谁"这个问题。'],
+    '钥匙':['钥匙象征着解决方案和新机会。你的潜意识知道某个问题的答案。'],
+    '时钟':['时钟和时间焦虑有关。也许你觉得时间不够用。'],
+    '山':['山代表着目标和挑战。梦见爬山说明你正在向一个目标努力。'],
+    '天气':['梦里的天气往往直接映射你的情绪状态。'],
+    '海洋':['海洋是潜意识最宏大的象征。梦见大海说明你的内心世界很广阔。'],
+    '星空':['梦见星空通常和梦想与希望有关。星星代表你内心的理想。'],
+    '城堡':['城堡象征着安全和权力，也可能代表你为自己建造的心理防御。'],
+    '迷失':['迷路的梦反映了方向感的缺失。也许你最近在某件事上拿不定主意。'],
+    '战斗':['战斗梦通常反映内在的冲突。也许你正在和自己的某个部分较劲。'],
+    '电梯':['电梯代表人生中的快速变化。上升象征进步，下降暗示不确定感。'],
+    '牙齿':['掉牙梦通常和自信心有关。你可能对自己形象有某种担忧。'],
+    '死亡':['死亡梦几乎总是代表"结束与新开始"。某个阶段在结束，新篇章即将展开。'],
+    '宝藏':['宝藏象征着你尚未发现的潜能和价值。'],
+    '童年':['梦回童年通常和怀旧以及寻找纯真有关。'],
+    '婚礼':['婚礼梦更多是关于"承诺"和"结合"的象征。'],
+    '变形':['变形梦说明你正在经历内在的变化和成长。'],
+    '隐身':['隐身梦可能反映了你想要暂时从社交压力中隐退的愿望。'],
+  };
+  let parts=[];
+  const mArr=mp[mood]||mp.neutral;
+  parts.push(pick(mArr));
+  const rel=kw.filter(k=>sp[k]);
+  shuffle(rel).slice(0,2).forEach(s=>parts.push(pick(sp[s])));
+  const cls=['梦境是内心的私语，不需要过度解读，感受它就好。','试着记住梦境带给你的感觉，那可能比内容本身更有意义。','每个梦都是一面小小的镜子，映照出我们白天不容易注意到的东西。','把梦记下来是很好的习惯，日后回看可能会发现有趣的联系。','晚安，希望明天的梦也一样值得被记住。','你的每一个梦都是独一无二的，就像你本人一样。','夜晚是心灵最诚实的时刻，谢谢你愿意记录下来。'];
+  parts.push(pick(cls));
+  return parts.join('\n\n');
+}
+
+function genTitle(text,kw){
+  if(kw.length>0&&kw[0]!=='碎片记忆'){
+    const t=[`关于${kw[0]}的梦`,`${kw[0]}与${kw[1]||'远方'}`,`梦见${kw[0]}`,`${kw[0]}的夜晚`,`夜里的${kw[0]}`];
+    return pick(t);
+  }
+  const sn=text.match(/[\u4e00-\u9fa5]{2,6}/g);
+  if(sn&&sn.length>1)return `${sn[0]}的梦`;
+  return '一个朦胧的梦';
+}
+
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ========================================
+// Init
+// ========================================
+function init(){
+  initBg();
+
+  // Build mood picker in sheet
+  document.getElementById('moodPicker').innerHTML=moods.map(m=>`<button class="mood-opt" data-mood="${m.key}" onclick="pickMood(this)">${m.emoji} ${m.full}</button>`).join('');
+
+  document.getElementById('dreamInput').addEventListener('input',function(){document.getElementById('charCount').textContent=this.value.length});
+  document.getElementById('searchInput').addEventListener('input',function(){searchQuery=this.value.trim();renderList()});
+
+  renderStats();
+  renderMoodFilter();
+  renderList();
+}
+
+function pickMood(el){
+  document.querySelectorAll('.mood-opt').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  currentMood=el.dataset.mood;
+}
+
+init();
+</script>
+</body>
+</html>
