@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- 背景渐变：深紫夜空 -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1040"/>
+      <stop offset="50%" stop-color="#0c0a1a"/>
+      <stop offset="100%" stop-color="#16083a"/>
+    </linearGradient>
+    <!-- 月亮光晕 -->
+    <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#a78bfa" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 月亮本体渐变 -->
+    <radialGradient id="moonBody" cx="0.35" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#f0e6ff"/>
+      <stop offset="40%" stop-color="#d4bbff"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </radialGradient>
+    <!-- 月牙阴影 -->
+    <radialGradient id="moonShadow" cx="0.6" cy="0.4" r="0.5">
+      <stop offset="0%" stop-color="#1a1040" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#1a1040" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 星星闪光 -->
+    <filter id="starGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- 圆角裁切 -->
+    <clipPath id="roundClip">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundClip)">
+    <!-- 背景 -->
+    <rect width="512" height="512" fill="url(#bg)"/>
+
+    <!-- 极细星尘点缀 -->
+    <circle cx="80" cy="90" r="1.5" fill="#e8e4f0" opacity="0.6"/>
+    <circle cx="420" cy="70" r="1" fill="#e8e4f0" opacity="0.5"/>
+    <circle cx="130" cy="380" r="1.2" fill="#e8e4f0" opacity="0.4"/>
+    <circle cx="400" cy="340" r="1.5" fill="#e8e4f0" opacity="0.55"/>
+    <circle cx="340" cy="420" r="1" fill="#e8e4f0" opacity="0.35"/>
+    <circle cx="90" cy="240" r="1.3" fill="#e8e4f0" opacity="0.45"/>
+    <circle cx="440" cy="200" r="1" fill="#e8e4f0" opacity="0.5"/>
+    <circle cx="200" cy="60" r="1.5" fill="#e8e4f0" opacity="0.4"/>
+    <circle cx="310" cy="100" r="1" fill="#e8e4f0" opacity="0.6"/>
+    <circle cx="60" cy="430" r="1.2" fill="#e8e4f0" opacity="0.3"/>
+    <circle cx="460" cy="440" r="1.5" fill="#e8e4f0" opacity="0.4"/>
+    <circle cx="170" cy="450" r="1" fill="#e8e4f0" opacity="0.5"/>
+
+    <!-- 月亮光晕（大范围柔光） -->
+    <circle cx="256" cy="210" r="180" fill="url(#moonGlow)"/>
+
+    <!-- 月亮主体 -->
+    <circle cx="248" cy="200" r="88" fill="url(#moonBody)"/>
+    <!-- 月牙效果：用一个深色圆遮盖部分，形成弯月 -->
+    <circle cx="290" cy="185" r="72" fill="url(#bg)" opacity="0.85"/>
+
+    <!-- 月亮表面微光点 -->
+    <circle cx="220" cy="180" r="3" fill="#fff" opacity="0.15"/>
+    <circle cx="205" cy="215" r="2" fill="#fff" opacity="0.1"/>
+    <circle cx="230" cy="230" r="2.5" fill="#fff" opacity="0.12"/>
+
+    <!-- 装饰星星：四角星形 -->
+    <g filter="url(#starGlow)">
+      <!-- 大星 -->
+      <path d="M380 140 L383 148 L391 151 L383 154 L380 162 L377 154 L369 151 L377 148 Z" fill="#fbbf24" opacity="0.9"/>
+      <!-- 中星 -->
+      <path d="M140 150 L142 155 L147 157 L142 159 L140 164 L138 159 L133 157 L138 155 Z" fill="#7dd3fc" opacity="0.8"/>
+      <!-- 小星群 -->
+      <path d="M350 280 L351.5 284 L355.5 285.5 L351.5 287 L350 291 L348.5 287 L344.5 285.5 L348.5 284 Z" fill="#f0abfc" opacity="0.7"/>
+      <path d="M120 310 L121.5 314 L125.5 315.5 L121.5 317 L120 321 L118.5 317 L114.5 315.5 L118.5 314 Z" fill="#5eead4" opacity="0.65"/>
+      <path d="M430 290 L431 293 L434 294 L431 295 L430 298 L429 295 L426 294 L429 293 Z" fill="#fda4af" opacity="0.6"/>
+    </g>
+
+    <!-- 底部：梦境云层/雾气 -->
+    <ellipse cx="256" cy="480" rx="280" ry="90" fill="#1a1040" opacity="0.5"/>
+    <ellipse cx="200" cy="470" rx="180" ry="60" fill="#231450" opacity="0.4"/>
+    <ellipse cx="330" cy="475" rx="160" ry="55" fill="#1e1045" opacity="0.35"/>
+
+    <!-- "Z z z" 梦的符号 -->
+    <g opacity="0.6">
+      <text x="310" y="300" font-family="'Nunito',sans-serif" font-weight="700" font-size="48" fill="#a78bfa" transform="rotate(-15 310 300)">Z</text>
+      <text x="345" y="270" font-family="'Nunito',sans-serif" font-weight="700" font-size="36" fill="#818cf8" opacity="0.7" transform="rotate(-10 345 270)">z</text>
+      <text x="370" y="248" font-family="'Nunito',sans-serif" font-weight="700" font-size="26" fill="#a78bfa" opacity="0.45" transform="rotate(-8 370 248)">z</text>
+    </g>
+
+    <!-- 底部微妙的紫色渐变收尾 -->
+    <rect y="440" width="512" height="72" fill="url(#bg)" opacity="0.3"/>
+  </g>
+</svg>
