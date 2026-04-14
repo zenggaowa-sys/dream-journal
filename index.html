@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>梦境日记</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a78bfa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="梦境日记">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0c0a1a;
+  --bg2:#110e24;
+  --card:rgba(255,255,255,.06);
+  --card-border:rgba(255,255,255,.08);
+  --card-hover:rgba(255,255,255,.10);
+  --text:#e8e4f0;
+  --text-dim:rgba(232,228,240,.5);
+  --text-muted:rgba(232,228,240,.3);
+  --accent:#a78bfa;
+  --accent2:#818cf8;
+  --accent-glow:rgba(167,139,250,.25);
+  --pink:#f0abfc;
+  --teal:#5eead4;
+  --rose:#fda4af;
+  --amber:#fbbf24;
+  --sky:#7dd3fc;
+  --lime:#a3e635;
+  --orange:#fb923c;
+  --radius:20px;
+  --radius-sm:14px;
+  --radius-pill:50px;
+  /* Safe area insets for notch / home indicator */
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
+
+body{
+  font-family:'ZCOOL KuaiLe','Nunito','PingFang SC',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+
+/* ====== Canvas BG ====== */
+canvas#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ====== App Shell ====== */
+.app{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative;z-index:1;padding:0 var(--sal) 0 var(--sar)}
+
+/* ====== Header ====== */
+.header{
+  padding:calc(20px + var(--sat)) 24px 18px;text-align:center;position:relative;
+}
+.header-glow{
+  position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,.15),transparent 70%);
+  pointer-events:none;filter:blur(40px);
+}
+.header .moon{
+  font-size:clamp(40px, 12vw, 56px);display:block;margin-bottom:4px;position:relative;z-index:1;
+  -webkit-animation:moonFloat 6s ease-in-out infinite;
+  animation:moonFloat 6s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(167,139,250,.3));
+  will-change:transform;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+}
+@-webkit-keyframes moonFloat{0%,100%{-webkit-transform:translateY(0) rotate(-2deg);transform:translateY(0) rotate(-2deg)}50%{-webkit-transform:translateY(-8px) rotate(2deg);transform:translateY(-8px) rotate(2deg)}}
+@keyframes moonFloat{0%,100%{-webkit-transform:translateY(0) rotate(-2deg);transform:translateY(0) rotate(-2deg)}50%{-webkit-transform:translateY(-8px) rotate(2deg);transform:translateY(-8px) rotate(2deg)}}
+.header h1{
+  font-size:clamp(18px, 5.5vw, 24px);font-weight:400;letter-spacing:clamp(4px, 2vw, 8px);
+  background:linear-gradient(135deg,var(--text),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  position:relative;z-index:1;
+}
+.header .sub{
+  font-size:clamp(10px, 2.8vw, 12px);color:var(--text-muted);margin-top:6px;letter-spacing:clamp(2px, 1vw, 4px);
+}
+
+/* ====== Settings ====== */
+.settings-btn{
+  position:absolute;top:calc(12px + var(--sat));right:16px;z-index:10;
+  background:none;border:none;color:var(--text-muted);font-size:20px;
+  cursor:pointer;padding:6px;opacity:.5;transition:opacity .2s;
+}
+.settings-btn:hover,.settings-btn:active{opacity:1}
+.settings-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.settings-overlay.open{opacity:1;pointer-events:auto}
+.settings-panel{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);
+  width:min(360px,88vw);background:var(--card);border-radius:var(--radius-card);
+  padding:24px;z-index:201;opacity:0;pointer-events:none;
+  transition:opacity .3s,transform .3s;
+  border:1px solid var(--border);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.settings-panel.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.settings-title{font-size:18px;font-weight:500;margin-bottom:18px;letter-spacing:1px}
+.settings-section{margin-bottom:12px}
+.settings-label{font-size:13px;font-weight:500;color:var(--accent);margin-bottom:6px}
+.settings-desc{font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.6}
+.key-input-wrap{display:flex;gap:8px;margin-bottom:12px}
+.key-input{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px 14px;color:var(--text);font-size:13px;font-family:monospace;
+  outline:none;transition:border-color .2s;
+}
+.key-input:focus{border-color:var(--accent)}
+.key-input::placeholder{color:var(--text-muted);opacity:.5}
+.key-toggle{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:0 12px;color:var(--text-muted);cursor:pointer;font-size:16px;
+}
+.settings-actions{display:flex;gap:8px;margin-bottom:8px}
+.settings-save-btn{
+  flex:1;padding:10px;border:none;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff;
+  font-size:13px;font-weight:500;cursor:pointer;
+}
+.settings-clear-btn{
+  padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius);
+  background:none;color:var(--text-muted);font-size:13px;cursor:pointer;
+}
+.ai-status{font-size:11px;color:var(--text-muted);text-align:center;min-height:16px}
+
+/* ====== Stats Bar ====== */
+.stats-bar{
+  display:flex;gap:8px;padding:4px 20px 10px;
+}
+.stat-chip{
+  flex:1;padding:10px 8px;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-sm);text-align:center;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:.3s;cursor:default;
+}
+.stat-chip:active{transform:scale(.96)}
+.stat-chip .num{font-size:clamp(18px, 5vw, 22px);color:var(--accent);line-height:1.2}
+.stat-chip .label{font-size:clamp(9px, 2.5vw, 10px);color:var(--text-muted);letter-spacing:1px;margin-top:2px}
+
+/* ====== Search ====== */
+.search-wrap{padding:0 20px 6px}
+.search-box{
+  position:relative;
+}
+.search-box input{
+  width:100%;padding:12px 18px 12px 42px;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius-pill);color:var(--text);font-size:14px;
+  font-family:inherit;outline:none;transition:.3s;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.search-box input:focus{border-color:rgba(167,139,250,.4);box-shadow:0 0 0 3px rgba(167,139,250,.1)}
+.search-box input::placeholder{color:var(--text-muted)}
+.search-box .icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--text-muted);pointer-events:none;
+}
+
+/* ====== Mood Filter ====== */
+.mood-filter{
+  display:flex;gap:6px;padding:8px 20px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.mood-filter::-webkit-scrollbar{display:none}
+.mood-chip{
+  flex-shrink:0;padding:6px 14px;border-radius:var(--radius-pill);
+  font-size:12px;border:1px solid var(--card-border);background:var(--card);
+  color:var(--text-dim);cursor:pointer;transition:.3s;white-space:nowrap;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  font-family:inherit;
+}
+.mood-chip:active{transform:scale(.95)}
+.mood-chip.active{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.3);
+  color:var(--accent);
+}
+
+/* ====== Dream List ====== */
+.dream-list{padding:8px 16px calc(120px + var(--sab))}
+
+.dream-card{
+  position:relative;
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:var(--radius);padding:18px 20px 16px;margin-bottom:12px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  cursor:pointer;transition:all .35s cubic-bezier(.25,.8,.25,1);
+  overflow:hidden;
+}
+.dream-card::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:linear-gradient(135deg,transparent 40%,rgba(167,139,250,.04) 100%);
+  pointer-events:none;transition:opacity .3s;opacity:0;
+}
+.dream-card:hover::before,.dream-card:active::before{opacity:1}
+.dream-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(167,139,250,.2);
+  box-shadow:0 8px 32px rgba(0,0,0,.3),0 0 0 1px rgba(167,139,250,.1);
+}
+.dream-card:active{transform:translateY(-1px) scale(.985)}
+
+/* Mood accent line */
+.dream-card .mood-line{
+  position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;
+}
+
+.dream-card .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dream-card .card-date{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+.dream-card .card-mood{
+  font-size:11px;padding:3px 10px;border-radius:var(--radius-pill);
+  letter-spacing:1px;
+}
+.dream-card .card-title{font-size:clamp(14px, 4vw, 16px);margin-bottom:6px;line-height:1.5}
+.dream-card .card-preview{
+  font-size:clamp(11px, 3vw, 12px);color:var(--text-dim);line-height:1.8;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.dream-card .card-tags{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.dream-card .tag{
+  font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);
+  background:rgba(255,255,255,.05);color:var(--text-muted);letter-spacing:.5px;
+}
+
+/* Mood colors */
+.ml-peaceful{background:var(--teal)}.mc-peaceful{background:rgba(94,234,212,.1);color:var(--teal)}
+.ml-mysterious{background:var(--accent)}.mc-mysterious{background:rgba(167,139,250,.1);color:var(--accent)}
+.ml-warm{background:var(--amber)}.mc-warm{background:rgba(251,191,36,.1);color:var(--amber)}
+.ml-anxious{background:var(--rose)}.mc-anxious{background:rgba(253,164,175,.1);color:var(--rose)}
+.ml-joyful{background:var(--amber)}.mc-joyful{background:rgba(251,191,36,.1);color:var(--amber)}
+.ml-sad{background:var(--sky)}.mc-sad{background:rgba(125,211,252,.1);color:var(--sky)}
+.ml-adventurous{background:var(--orange)}.mc-adventurous{background:rgba(251,146,60,.1);color:var(--orange)}
+.ml-romantic{background:var(--pink)}.mc-romantic{background:rgba(240,171,252,.1);color:var(--pink)}
+.ml-neutral{background:var(--text-dim)}.mc-neutral{background:rgba(255,255,255,.05);color:var(--text-dim)}
+
+/* ====== Empty State ====== */
+.empty{text-align:center;padding:80px 40px}
+.empty .icon{font-size:64px;opacity:.3;display:block;margin-bottom:16px;-webkit-animation:moonFloat 5s ease-in-out infinite;animation:moonFloat 5s ease-in-out infinite;will-change:transform;-webkit-transform:translateZ(0);transform:translateZ(0)}
+.empty p{font-size:14px;color:var(--text-muted);line-height:2}
+
+/* ====== FAB ====== */
+.fab{
+  position:fixed;bottom:calc(24px + var(--sab));left:50%;transform:translateX(-50%);
+  width:clamp(52px, 14vw, 60px);height:clamp(52px, 14vw, 60px);border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;cursor:pointer;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 24px rgba(167,139,250,.4),0 0 60px rgba(167,139,250,.15);
+  transition:all .35s cubic-bezier(.25,.8,.25,1);
+}
+.fab:hover{transform:translateX(-50%) scale(1.1);box-shadow:0 6px 32px rgba(167,139,250,.5),0 0 80px rgba(167,139,250,.2)}
+.fab:active{transform:translateX(-50%) scale(.95)}
+.fab svg{width:26px;height:26px;transition:transform .35s}
+.fab.open svg{transform:rotate(45deg)}
+/* Ripple on fab */
+.fab .ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.3);transform:scale(0);
+  animation:rippleOut .6s ease-out forwards;pointer-events:none;
+}
+@keyframes rippleOut{to{transform:scale(2.5);opacity:0}}
+
+/* ====== Bottom Sheet ====== */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;
+  opacity:0;pointer-events:none;transition:opacity .35s;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.sheet-overlay.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:520px;
+  background:rgba(18,15,36,.95);
+  border-radius:24px 24px 0 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  z-index:70;padding:0 0 calc(20px + var(--sab));
+  transition:transform .45s cubic-bezier(.32,.72,0,1);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  max-height:92vh;max-height:92dvh;overflow-y:auto;
+}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.sheet-handle{
+  width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);
+  margin:12px auto 6px;
+}
+.sheet-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 24px 14px;
+}
+.sheet-title{font-size:18px;letter-spacing:3px;color:var(--text)}
+.sheet-close{
+  background:none;border:none;color:var(--text-muted);cursor:pointer;
+  padding:8px;border-radius:50%;transition:.2s;font-size:20px;
+}
+.sheet-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.sheet-body{padding:0 24px}
+
+/* Input */
+.input-group{margin-bottom:18px}
+.input-label{
+  font-size:13px;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;
+  display:flex;align-items:center;gap:6px;
+}
+.dream-textarea{
+  width:100%;min-height:140px;border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:16px 18px;font-family:inherit;font-size:15px;line-height:2;
+  color:var(--text);background:rgba(255,255,255,.04);resize:none;outline:none;
+  transition:.3s;
+}
+.dream-textarea:focus{border-color:rgba(167,139,250,.3);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+.dream-textarea::placeholder{color:var(--text-muted)}
+.char-count{text-align:right;font-size:10px;color:var(--text-muted);margin-top:4px}
+
+/* Sheet mood picker */
+.mood-grid{display:flex;gap:6px;flex-wrap:wrap}
+.mood-opt{
+  padding:7px 14px;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  font-size:12px;cursor:pointer;transition:.25s;background:rgba(255,255,255,.03);
+  font-family:inherit;color:var(--text-dim);display:flex;align-items:center;gap:4px;
+}
+.mood-opt:active{transform:scale(.94)}
+.mood-opt.selected{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.4);
+  color:var(--accent);box-shadow:0 0 12px rgba(167,139,250,.15);
+}
+
+/* Action btn */
+.action-btn{
+  width:100%;padding:15px;border:none;border-radius:var(--radius);
+  font-size:15px;font-family:inherit;cursor:pointer;transition:.3s;
+  letter-spacing:3px;margin-top:4px;position:relative;overflow:hidden;
+}
+.action-btn:active{transform:scale(.98)}
+.process-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 4px 20px rgba(167,139,250,.3);
+}
+.process-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.save-btn{
+  background:linear-gradient(135deg,#5eead4,#2dd4bf);color:#0c0a1a;
+  box-shadow:0 4px 20px rgba(94,234,212,.2);margin-top:10px;
+}
+
+/* Result blocks */
+.result-area{display:none;margin-top:18px;animation:slideUp .4s ease}
+.result-area.show{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.result-block{
+  background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;
+}
+.result-block .rb-title{
+  font-size:13px;color:var(--accent);margin-bottom:8px;letter-spacing:2px;
+  display:flex;align-items:center;gap:6px;
+}
+.result-block .rb-content{font-size:13px;line-height:2;color:var(--text-dim);white-space:pre-wrap}
+.kw-tag{
+  display:inline-block;padding:3px 12px;border-radius:var(--radius-pill);
+  font-size:11px;margin:3px 3px 3px 0;background:rgba(167,139,250,.1);color:var(--accent);
+}
+
+/* ====== Detail Modal ====== */
+.detail-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.detail-overlay.open{opacity:1;pointer-events:auto}
+.detail-panel{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:520px;
+  background:rgba(18,15,36,.96);border-radius:24px 24px 0 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  z-index:90;max-height:90vh;max-height:90dvh;overflow-y:auto;
+  transition:transform .45s cubic-bezier(.32,.72,0,1);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  padding-bottom:calc(20px + var(--sab));
+}
+.detail-panel.open{transform:translateX(-50%) translateY(0)}
+.detail-handle{width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);margin:12px auto 0}
+.detail-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:14px 24px 0;
+}
+.detail-header .dh-left{flex:1}
+.detail-header .dh-title{font-size:20px;line-height:1.5;margin-bottom:4px}
+.detail-header .dh-meta{display:flex;gap:10px;align-items:center}
+.detail-header .dh-date{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+.detail-header .dh-mood{font-size:11px;padding:3px 10px;border-radius:var(--radius-pill)}
+.detail-body{padding:18px 24px 0}
+.detail-body .db-section{margin-bottom:20px}
+.detail-body .db-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;letter-spacing:2px}
+.detail-body .db-text{font-size:14px;line-height:2.2;color:var(--text-dim);white-space:pre-wrap}
+.detail-body .db-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.detail-body .db-tag{
+  padding:4px 12px;border-radius:var(--radius-pill);font-size:11px;
+  background:rgba(167,139,250,.08);color:var(--accent);letter-spacing:.5px;
+}
+.detail-body .divider{
+  width:40px;height:2px;border-radius:2px;margin:10px 0;
+  background:linear-gradient(90deg,var(--accent),transparent);
+}
+.delete-row{text-align:center;padding:20px;display:flex;gap:10px;justify-content:center}
+.delete-btn{
+  background:none;border:1px solid rgba(253,164,175,.3);border-radius:var(--radius-pill);
+  color:var(--rose);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.delete-btn:hover{background:rgba(253,164,175,.08)}
+.delete-btn:active{transform:scale(.96)}
+
+/* ====== Edit Mode in Detail ====== */
+.edit-btn{
+  background:none;border:1px solid rgba(167,139,250,.3);border-radius:var(--radius-pill);
+  color:var(--accent);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.edit-btn:hover{background:rgba(167,139,250,.08)}
+.edit-btn:active{transform:scale(.96)}
+.save-edit-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--radius-pill);
+  color:#fff;font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+  box-shadow:0 2px 12px rgba(167,139,250,.3);
+}
+.save-edit-btn:active{transform:scale(.96)}
+.cancel-edit-btn{
+  background:none;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  color:var(--text-dim);font-size:12px;padding:8px 24px;cursor:pointer;
+  font-family:inherit;transition:.3s;letter-spacing:1px;
+}
+.cancel-edit-btn:hover{background:rgba(255,255,255,.04)}
+
+/* Edit inputs */
+.edit-title-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(167,139,250,.25);
+  border-radius:var(--radius-sm);padding:10px 14px;font-family:inherit;
+  font-size:18px;color:var(--text);outline:none;transition:.3s;
+}
+.edit-title-input:focus{border-color:rgba(167,139,250,.5);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+.edit-textarea{
+  width:100%;min-height:120px;background:rgba(255,255,255,.04);border:1px solid rgba(167,139,250,.25);
+  border-radius:var(--radius-sm);padding:12px 14px;font-family:inherit;
+  font-size:14px;line-height:2;color:var(--text);outline:none;resize:none;transition:.3s;
+}
+.edit-textarea:focus{border-color:rgba(167,139,250,.5);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+
+/* Edit mood picker */
+.edit-mood-wrap{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.edit-mood-opt{
+  padding:5px 12px;border:1px solid var(--card-border);border-radius:var(--radius-pill);
+  font-size:11px;cursor:pointer;transition:.25s;background:rgba(255,255,255,.03);
+  font-family:inherit;color:var(--text-dim);
+}
+.edit-mood-opt:active{transform:scale(.94)}
+.edit-mood-opt.selected{
+  background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.4);
+  color:var(--accent);
+}
+
+/* Edit tags */
+.edit-tags-wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.edit-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:var(--radius-pill);font-size:11px;
+  background:rgba(167,139,250,.1);color:var(--accent);letter-spacing:.5px;
+  transition:.2s;
+}
+.edit-tag .tag-remove{
+  cursor:pointer;font-size:14px;line-height:1;opacity:.6;transition:.2s;
+  margin-left:2px;
+}
+.edit-tag .tag-remove:hover{opacity:1;color:var(--rose)}
+.add-tag-input{
+  padding:4px 10px;border:1px dashed rgba(167,139,250,.3);border-radius:var(--radius-pill);
+  font-size:11px;background:transparent;color:var(--accent);outline:none;
+  font-family:inherit;width:80px;transition:.3s;
+}
+.add-tag-input:focus{border-color:var(--accent);width:100px}
+.add-tag-input::placeholder{color:var(--text-muted)}
+
+/* ====== Collapsible Month Groups ====== */
+.month-group{margin-bottom:6px}
+.month-header{
+  display:flex;align-items:center;gap:8px;padding:10px 4px 6px;
+  cursor:pointer;user-select:none;transition:.2s;
+}
+.month-header:active{opacity:.7}
+.month-header .month-arrow{
+  width:18px;height:18px;color:var(--text-muted);transition:transform .3s;flex-shrink:0;
+}
+.month-header.collapsed .month-arrow{transform:rotate(-90deg)}
+.month-header .month-label{
+  font-size:13px;color:var(--text-muted);letter-spacing:2px;flex:1;
+}
+.month-header .month-count{
+  font-size:11px;color:var(--text-muted);padding:2px 8px;
+  border-radius:var(--radius-pill);background:rgba(255,255,255,.04);
+}
+.month-cards{
+  overflow:hidden;transition:max-height .4s cubic-bezier(.25,.8,.25,1), opacity .3s;
+  max-height:5000px;opacity:1;
+}
+.month-cards.collapsed{max-height:0;opacity:0}
+
+/* Collapse all / expand all toggle */
+.list-toggle{
+  display:flex;justify-content:flex-end;padding:0 4px 4px;
+}
+.toggle-all-btn{
+  background:none;border:none;font-size:11px;color:var(--text-muted);
+  cursor:pointer;font-family:inherit;letter-spacing:1px;padding:4px 8px;
+  border-radius:var(--radius-pill);transition:.2s;
+}
+.toggle-all-btn:hover{background:rgba(255,255,255,.04);color:var(--accent)}
+.toggle-all-btn:active{transform:scale(.96)}
+
+/* Loading dots */
+.dots{display:inline-flex;gap:4px;align-items:center;vertical-align:middle}
+.dots span{width:5px;height:5px;border-radius:50%;background:#fff;animation:dotPulse 1.2s ease infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(.7)}40%{opacity:1;transform:scale(1.2)}}
+
+/* Scroll */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+/* Toast */
+.toast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);
+  background:rgba(167,139,250,.9);color:#fff;
+  padding:12px 28px;border-radius:var(--radius-pill);
+  font-size:14px;letter-spacing:2px;z-index:200;
+  opacity:0;pointer-events:none;
+  transition:all .35s cubic-bezier(.25,.8,.25,1);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* Swipe-to-reveal delete */
+.card-wrapper{position:relative;margin-bottom:12px}
+.card-delete-behind{
+  position:absolute;right:0;top:0;bottom:0;width:90px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(90deg,transparent,rgba(253,80,80,.18) 30%,rgba(253,80,80,.25));
+  border-radius:var(--radius);opacity:0;transition:opacity .25s;pointer-events:none;
+}
+.card-wrapper.reveal .card-delete-behind{opacity:1;pointer-events:auto}
+.card-delete-behind button{
+  background:rgba(253,80,80,.85);border:none;color:#fff;
+  font-size:12px;font-family:inherit;padding:10px 16px;
+  border-radius:var(--radius-sm);cursor:pointer;letter-spacing:1px;
+  transition:.2s;
+}
+.card-delete-behind button:active{transform:scale(.92)}
+.dream-card{margin-bottom:0}
+.dream-card .swipe-hint{display:none}
+
+/* Confirm delete dialog */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.confirm-overlay.open{opacity:1;pointer-events:auto}
+.confirm-dialog{
+  background:rgba(24,20,48,.96);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--radius);padding:28px 24px 20px;width:280px;
+  text-align:center;transform:scale(.85);transition:transform .3s cubic-bezier(.32,.72,0,1);
+  backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+}
+.confirm-overlay.open .confirm-dialog{transform:scale(1)}
+.confirm-dialog .cd-icon{font-size:32px;margin-bottom:12px;display:block}
+.confirm-dialog .cd-title{font-size:16px;margin-bottom:6px;letter-spacing:2px;color:var(--text)}
+.confirm-dialog .cd-sub{font-size:12px;color:var(--text-muted);margin-bottom:22px;line-height:1.8}
+.confirm-dialog .cd-actions{display:flex;gap:10px}
+.confirm-dialog .cd-cancel{
+  flex:1;padding:11px;border:1px solid var(--card-border);border-radius:var(--radius-sm);
+  background:none;color:var(--text-dim);font-size:14px;font-family:inherit;cursor:pointer;
+  transition:.2s;letter-spacing:1px;
+}
+.confirm-dialog .cd-cancel:active{transform:scale(.96)}
+.confirm-dialog .cd-confirm{
+  flex:1;padding:11px;border:none;border-radius:var(--radius-sm);
+  background:rgba(253,80,80,.8);color:#fff;font-size:14px;font-family:inherit;cursor:pointer;
+  transition:.2s;letter-spacing:1px;
+}
+.confirm-dialog .cd-confirm:active{transform:scale(.96)}
+
+/* ====== Responsive: small phones (SE / 320px) ====== */
+@media(max-width:360px){
+  .header{padding:calc(16px + var(--sat)) 16px 14px}
+  .stats-bar{padding:4px 12px 8px;gap:6px}
+  .stat-chip{padding:8px 6px}
+  .search-wrap{padding:0 12px 6px}
+  .mood-filter{padding:6px 12px;gap:4px}
+  .mood-chip{padding:5px 10px;font-size:11px}
+  .dream-list{padding:6px 10px calc(110px + var(--sab))}
+  .dream-card{padding:14px 14px 12px;margin-bottom:10px;border-radius:16px}
+  .sheet-body{padding:0 16px}
+  .sheet-header{padding:8px 16px 12px}
+  .detail-header{padding:12px 16px 0}
+  .detail-body{padding:14px 16px 0}
+}
+
+/* ====== Responsive: large phones / small tablets ====== */
+@media(min-width:520px){
+  .app{max-width:520px}
+  .dream-card{padding:22px 24px 20px}
+  .stats-bar{gap:12px;padding:4px 24px 12px}
+  .search-wrap{padding:0 24px 8px}
+  .mood-filter{padding:10px 24px}
+  .dream-list{padding:10px 20px calc(130px + var(--sab))}
+}
+
+/* ====== Responsive: tablets (iPad etc) ====== */
+@media(min-width:768px){
+  .app{max-width:600px}
+  .header{padding:calc(30px + var(--sat)) 32px 24px}
+  .dream-card{border-radius:24px}
+  .fab{width:64px;height:64px}
+  .sheet,.detail-panel{max-width:600px;border-radius:28px 28px 0 0}
+}
+
+/* ====== Landscape orientation ====== */
+@media(orientation:landscape) and (max-height:500px){
+  .header{padding:calc(8px + var(--sat)) 24px 8px}
+  .header .moon{font-size:36px}
+  .header h1{font-size:18px}
+  .header .sub{display:none}
+  .stats-bar{padding:2px 20px 6px}
+  .stat-chip{padding:6px 8px}
+  .stat-chip .num{font-size:16px}
+  .sheet{max-height:96vh;max-height:96dvh}
+  .detail-panel{max-height:96vh;max-height:96dvh}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-glow"></div>
+    <button class="settings-btn" onclick="toggleSettings()" title="设置">&#9881;</button>
+    <span class="moon">&#127769;</span>
+    <h1>梦境日记</h1>
+    <div class="sub">记录夜晚的每一个故事</div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)toggleSettings()"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-title">&#9881; 设置</div>
+    <div class="settings-section">
+      <div class="settings-label">DeepSeek API Key</div>
+      <div class="settings-desc">填入你的 DeepSeek API Key 即可开启 AI 深度解梦。没有 Key 则使用本地分析引擎。<br><a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent);font-size:10px">去 DeepSeek 获取 Key →</a></div>
+      <div class="key-input-wrap">
+        <input type="password" id="apiKeyInput" class="key-input" placeholder="sk-..." autocomplete="off">
+        <button class="key-toggle" onclick="toggleKeyVis()" id="keyToggleBtn">&#128065;</button>
+      </div>
+      <div class="settings-actions">
+        <button class="settings-save-btn" onclick="saveAPIKey()">保存</button>
+        <button class="settings-clear-btn" onclick="clearAPIKey()">清除</button>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="搜索梦境...">
+    </div>
+  </div>
+
+  <!-- Mood Filter -->
+  <div class="mood-filter" id="moodFilter"></div>
+
+  <!-- Dream List -->
+  <div class="dream-list" id="dreamList"></div>
+  <div class="empty" id="emptyState" style="display:none">
+    <span class="icon">&#9729;&#65039;</span>
+    <p>还没有记录任何梦境<br>点击下方按钮开始记录吧</p>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="openSheet()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<!-- Bottom Sheet (Record) -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">&#10024; 记录梦境</span>
+    <button class="sheet-close" onclick="closeSheet()">&times;</button>
+  </div>
+  <div class="sheet-body">
+    <div class="input-group">
+      <div class="input-label">&#9997;&#65039; 口述你的梦境</div>
+      <textarea class="dream-textarea" id="dreamInput" placeholder="闭上眼睛回忆一下~ 把梦里的画面用文字描述出来..."></textarea>
+      <div class="char-count"><span id="charCount">0</span> 字</div>
+    </div>
+    <div class="input-group">
+      <div class="input-label">&#127752; 梦境的感觉</div>
+      <div class="mood-grid" id="moodPicker"></div>
+    </div>
+    <button class="action-btn process-btn" id="processBtn" onclick="processDream()">&#10024; 整理梦境</button>
+    <div class="result-area" id="resultArea">
+      <div class="result-block">
+        <div class="rb-title">&#128221; 整理后的梦境</div>
+        <div class="rb-content" id="tidiedContent"></div>
+      </div>
+      <div class="result-block">
+        <div class="rb-title db-label-analysis">&#128300; 梦境小分析</div>
+        <div class="rb-content" id="analysisContent"></div>
+      </div>
+      <div class="result-block" id="kwBlock">
+        <div class="rb-title">&#127793; 关键意象</div>
+        <div id="kwContent"></div>
+      </div>
+      <button class="action-btn save-btn" onclick="saveDream()">&#128151; 保存这个梦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-handle"></div>
+  <div class="detail-header" id="detailHeader"></div>
+  <div class="detail-body" id="detailBody"></div>
+  <div class="delete-row" id="actionRow"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Confirm Delete Dialog -->
+<div class="confirm-overlay" id="confirmOverlay" onclick="cancelDelete()">
+  <div class="confirm-dialog" onclick="event.stopPropagation()">
+    <span class="cd-icon">&#128466;</span>
+    <div class="cd-title">确认删除？</div>
+    <div class="cd-sub">这条梦境记录将被永久删除<br>无法恢复</div>
+    <div class="cd-actions">
+      <button class="cd-cancel" onclick="cancelDelete()">取消</button>
+      <button class="cd-confirm" id="confirmDeleteBtn">删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========================================
+// Storage
+// ========================================
+const SK='dreamJournal';
+function loadDreams(){try{return JSON.parse(localStorage.getItem(SK)||'[]')}catch{return[]}}
+function saveDreams(d){localStorage.setItem(SK,JSON.stringify(d))}
+
+// ========================================
+// State
+// ========================================
+let currentMood='',currentProcessed=null,filterMood='',searchQuery='';
+
+// ========================================
+// Mood config
+// ========================================
+const moods=[
+  {key:'peaceful',emoji:'🍃',label:'平静',full:'平静安宁'},
+  {key:'mysterious',emoji:'🔮',label:'奇幻',full:'神秘奇幻'},
+  {key:'warm',emoji:'☀️',label:'温暖',full:'温暖美好'},
+  {key:'anxious',emoji:'🌊',label:'不安',full:'紧张不安'},
+  {key:'joyful',emoji:'🎉',label:'欢乐',full:'开心欢乐'},
+  {key:'sad',emoji:'🌧️',label:'感怀',full:'忧伤感怀'},
+  {key:'adventurous',emoji:'🌍',label:'冒险',full:'冒险刺激'},
+  {key:'romantic',emoji:'🌹',label:'甜蜜',full:'浪漫甜蜜'},
+  {key:'neutral',emoji:'💬',label:'朦胧',full:'说不清楚'},
+];
+const moodMap=Object.fromEntries(moods.map(m=>[m.key,m]));
+
+// ========================================
+// Date helpers
+// ========================================
+function fmtDate(ts){
+  const d=new Date(ts),w=['日','一','二','三','四','五','六'];
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 星期${w[d.getDay()]}`;
+}
+function fmtShort(ts){
+  const d=new Date(ts);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtRelative(ts){
+  const diff=Date.now()-ts,m=60000,h=3600000,day=86400000;
+  if(diff<m) return '刚刚';
+  if(diff<h) return Math.floor(diff/m)+'分钟前';
+  if(diff<day) return Math.floor(diff/h)+'小时前';
+  if(diff<day*2) return '昨天';
+  if(diff<day*7) return Math.floor(diff/day)+'天前';
+  return fmtShort(ts);
+}
+
+// ========================================
+// Canvas Background — particles
+// ========================================
+function initBg(){
+  const c=document.getElementById('bgCanvas'),ctx=c.getContext('2d');
+  let W,H,dpr;
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1, 2); // cap at 2x to save perf
+    W=innerWidth;H=innerHeight;
+    c.width=W*dpr;c.height=H*dpr;
+    c.style.width=W+'px';c.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();window.addEventListener('resize',resize);
+
+  // Adaptive particle count based on screen size
+  const area=screen.width*screen.height;
+  const starCount=Math.max(40, Math.min(120, Math.round(area/12000)));
+  const flyCount=Math.max(6, Math.min(18, Math.round(area/60000)));
+
+  // Stars
+  const stars=Array.from({length:starCount},()=>({
+    x:Math.random()*4000,y:Math.random()*4000,
+    r:.3+Math.random()*1.2,
+    a:Math.random()*6.28,
+    speed:.002+Math.random()*.005,
+    bright:.2+Math.random()*.5,
+    color:`hsla(${250+Math.random()*40},60%,80%,`
+  }));
+
+  // Fireflies
+  const flies=Array.from({length:flyCount},()=>({
+    x:Math.random()*4000,y:Math.random()*4000,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+    r:1.5+Math.random()*2,
+    phase:Math.random()*6.28,
+    color:Math.random()>.5?'167,139,250':'240,171,252'
+  }));
+
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+
+    // Stars
+    stars.forEach(s=>{
+      s.a+=s.speed;
+      const bright=s.bright*(0.5+0.5*Math.sin(s.a));
+      ctx.beginPath();
+      ctx.arc(s.x%W,s.y%H,s.r,0,6.28);
+      ctx.fillStyle=s.color+bright+')';
+      ctx.fill();
+    });
+
+    // Fireflies
+    flies.forEach(f=>{
+      f.x+=f.vx; f.y+=f.vy;
+      f.phase+=.02;
+      if(f.x<0||f.x>W)f.vx*=-1;
+      if(f.y<0||f.y>H)f.vy*=-1;
+      const glow=.3+.7*(.5+.5*Math.sin(f.phase));
+      ctx.beginPath();
+      ctx.arc(f.x,f.y,f.r,0,6.28);
+      const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*4);
+      g.addColorStop(0,`rgba(${f.color},${glow*.6})`);
+      g.addColorStop(1,`rgba(${f.color},0)`);
+      ctx.fillStyle=g;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+
+// ========================================
+// Render stats
+// ========================================
+function renderStats(){
+  const dreams=loadDreams();
+  const now=new Date(),thisMonth=dreams.filter(d=>{const dd=new Date(d.timestamp);return dd.getMonth()===now.getMonth()&&dd.getFullYear()===now.getFullYear()});
+  const moodSet=new Set(dreams.map(d=>d.mood||'neutral'));
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-chip"><div class="num">${dreams.length}</div><div class="label">全部梦境</div></div>
+    <div class="stat-chip"><div class="num">${thisMonth.length}</div><div class="label">本月记录</div></div>
+    <div class="stat-chip"><div class="num">${moodSet.size}</div><div class="label">情绪种类</div></div>
+  `;
+}
+
+// ========================================
+// Mood filter chips
+// ========================================
+function renderMoodFilter(){
+  const el=document.getElementById('moodFilter');
+  let html=`<button class="mood-chip ${filterMood===''?'active':''}" onclick="setFilter('')">全部</button>`;
+  moods.forEach(m=>{
+    html+=`<button class="mood-chip ${filterMood===m.key?'active':''}" onclick="setFilter('${m.key}')">${m.emoji} ${m.label}</button>`;
+  });
+  el.innerHTML=html;
+}
+function setFilter(m){
+  filterMood=m;
+  renderMoodFilter();
+  renderList();
+}
+
+// ========================================
+// Collapsed months state
+// ========================================
+let collapsedMonths={}; // key: "2026-04", value: true/false
+try{collapsedMonths=JSON.parse(localStorage.getItem('dreamCollapsed')||'{}');}catch{}
+function saveCollapsed(){localStorage.setItem('dreamCollapsed',JSON.stringify(collapsedMonths))}
+
+// ========================================
+// Render dream list (grouped by month, collapsible)
+// ========================================
+function renderList(){
+  const all=loadDreams(), list=document.getElementById('dreamList'), empty=document.getElementById('emptyState');
+  let dreams=[...all];
+
+  // Filter by mood
+  if(filterMood) dreams=dreams.filter(d=>(d.mood||'neutral')===filterMood);
+  // Filter by search
+  if(searchQuery){
+    const q=searchQuery.toLowerCase();
+    dreams=dreams.filter(d=>(d.title||'').toLowerCase().includes(q)||(d.tidied||'').toLowerCase().includes(q)||(d.raw||'').toLowerCase().includes(q)||(d.keywords||[]).some(k=>k.toLowerCase().includes(q)));
+  }
+
+  if(all.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+
+  if(dreams.length===0){
+    list.innerHTML='<div style="text-align:center;padding:50px;color:var(--text-muted);font-size:13px">没有找到匹配的梦境</div>';
+    return;
+  }
+
+  // Group by month
+  const groups={};
+  dreams.forEach(d=>{
+    const dt=new Date(d.timestamp);
+    const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    if(!groups[key])groups[key]={label:`${dt.getFullYear()}年${dt.getMonth()+1}月`,dreams:[]};
+    groups[key].dreams.push(d);
+  });
+
+  const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const allCollapsed=sortedKeys.length>0 && sortedKeys.every(k=>collapsedMonths[k]);
+
+  let html='';
+  // Toggle all button (only show when >1 month or many dreams)
+  if(sortedKeys.length>1 || dreams.length>5){
+    html+=`<div class="list-toggle">
+      <button class="toggle-all-btn" onclick="toggleAllMonths()">${allCollapsed?'展开全部':'收起全部'}</button>
+    </div>`;
+  }
+
+  sortedKeys.forEach(key=>{
+    const g=groups[key];
+    const isCollapsed=!!collapsedMonths[key];
+    html+=`<div class="month-group">
+      <div class="month-header${isCollapsed?' collapsed':''}" onclick="toggleMonth('${key}')">
+        <svg class="month-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        <span class="month-label">${g.label}</span>
+        <span class="month-count">${g.dreams.length} 篇</span>
+      </div>
+      <div class="month-cards${isCollapsed?' collapsed':''}">`;
+
+    g.dreams.forEach(d=>{
+      const idx=all.indexOf(d);
+      const m=d.mood||'neutral';
+      const mi=moodMap[m]||moodMap.neutral;
+      const tags=(d.keywords||[]).slice(0,3);
+      html+=`<div class="card-wrapper" data-idx="${idx}">
+        <div class="card-delete-behind"><button onclick="event.stopPropagation();confirmDelete(${idx})">删除</button></div>
+        <div class="dream-card" onclick="openDetail(${idx})" ontouchstart="tStart(event,this)" ontouchmove="tMove(event,this)" ontouchend="tEnd(event,this)">
+          <div class="mood-line ml-${m}"></div>
+          <div class="card-top">
+            <span class="card-date">${fmtRelative(d.timestamp)}</span>
+            <span class="card-mood mc-${m}">${mi.emoji} ${mi.label}</span>
+          </div>
+          <div class="card-title">${esc(d.title||'无题之梦')}</div>
+          <div class="card-preview">${esc(d.tidied||d.raw||'')}</div>
+          ${tags.length?`<div class="card-tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+        </div>
+      </div>`;
+    });
+
+    html+=`</div></div>`;
+  });
+
+  list.innerHTML=html;
+}
+
+function toggleMonth(key){
+  collapsedMonths[key]=!collapsedMonths[key];
+  saveCollapsed();
+  renderList();
+}
+
+function toggleAllMonths(){
+  const all=loadDreams();
+  // Compute current month keys
+  const keys=new Set();
+  all.forEach(d=>{
+    const dt=new Date(d.timestamp);
+    keys.add(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`);
+  });
+  const allCollapsed=[...keys].every(k=>collapsedMonths[k]);
+  keys.forEach(k=>{collapsedMonths[k]=!allCollapsed});
+  saveCollapsed();
+  renderList();
+}
+
+// ========================================
+// Touch swipe-to-reveal delete button
+// ========================================
+let touchStartX=0,touchCard=null,swiping=false,currentRevealedWrapper=null;
+
+function closeAllRevealed(){
+  if(currentRevealedWrapper){
+    const card=currentRevealedWrapper.querySelector('.dream-card');
+    if(card){card.style.transition='transform .3s';card.style.transform='translateX(0)'}
+    currentRevealedWrapper.classList.remove('reveal');
+    currentRevealedWrapper=null;
+  }
+}
+
+function tStart(e,el){
+  touchStartX=e.touches[0].clientX;touchCard=el;swiping=false;
+  el.style.transition='none';
+}
+function tMove(e,el){
+  if(!touchCard)return;
+  const dx=e.touches[0].clientX-touchStartX;
+  if(dx<-10){swiping=true;el.style.transform=`translateX(${Math.max(dx,-90)}px)`;e.preventDefault()}
+}
+function tEnd(e,el){
+  if(!touchCard)return;
+  el.style.transition='transform .3s';
+  if(swiping){
+    const dx=parseFloat(el.style.transform.replace(/[^-\d.]/g,''))||0;
+    const wrapper=el.closest('.card-wrapper');
+    if(dx<-50){
+      // Reveal delete button
+      closeAllRevealed();
+      el.style.transform='translateX(-90px)';
+      wrapper.classList.add('reveal');
+      currentRevealedWrapper=wrapper;
+    } else {
+      el.style.transform='translateX(0)';
+      if(wrapper)wrapper.classList.remove('reveal');
+    }
+  } else {
+    el.style.transform='translateX(0)';
+  }
+  touchCard=null;swiping=false;
+}
+
+// Close revealed card when tapping elsewhere
+document.addEventListener('touchstart',function(e){
+  if(currentRevealedWrapper && !currentRevealedWrapper.contains(e.target)){
+    closeAllRevealed();
+  }
+},{passive:true});
+
+// ========================================
+// Confirm delete dialog
+// ========================================
+let pendingDeleteIdx=-1;
+
+function confirmDelete(idx){
+  pendingDeleteIdx=idx;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('confirmDeleteBtn').onclick=function(){executeDelete()};
+}
+
+function cancelDelete(){
+  pendingDeleteIdx=-1;
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+
+function executeDelete(){
+  if(pendingDeleteIdx<0)return;
+  const dreams=loadDreams();dreams.splice(pendingDeleteIdx,1);saveDreams(dreams);
+  cancelDelete();
+  closeAllRevealed();
+  closeDetail();
+  renderStats();renderList();
+  showToast('已删除');
+  editingIdx=-1;editMode=false;
+}
+
+// ========================================
+// Sheet (record panel)
+// ========================================
+function openSheet(){
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('fabBtn').classList.add('open');
+  resetSheet();
+}
+function closeSheet(){
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('fabBtn').classList.remove('open');
+}
+function resetSheet(){
+  document.getElementById('dreamInput').value='';
+  document.getElementById('charCount').textContent='0';
+  document.getElementById('resultArea').classList.remove('show');
+  const btn=document.getElementById('processBtn');
+  btn.disabled=false;btn.innerHTML='&#10024; 整理梦境';
+  currentMood='';currentProcessed=null;
+  document.querySelectorAll('.mood-opt').forEach(b=>b.classList.remove('selected'));
+}
+
+// ========================================
+// Detail panel (view + edit mode)
+// ========================================
+let editingIdx=-1, editMode=false;
+
+function openDetail(idx){
+  editingIdx=idx;editMode=false;
+  renderDetail();
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function renderDetail(){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+  const m=d.mood||'neutral',mi=moodMap[m]||moodMap.neutral;
+
+  if(editMode){
+    // === EDIT MODE ===
+    document.getElementById('detailHeader').innerHTML=`
+      <div class="dh-left">
+        <input class="edit-title-input" id="editTitle" value="${esc(d.title||'')}" placeholder="梦境标题...">
+      </div>`;
+
+    let body=`
+      <div class="db-section">
+        <div class="db-label">&#128221; 梦境内容</div>
+        <textarea class="edit-textarea" id="editContent">${esc(d.tidied||d.raw||'')}</textarea>
+      </div>
+      <div class="db-section">
+        <div class="db-label">&#127752; 情绪</div>
+        <div class="edit-mood-wrap" id="editMoodPicker">
+          ${moods.map(mo=>`<button class="edit-mood-opt${m===mo.key?' selected':''}" data-mood="${mo.key}" onclick="pickEditMood(this)">${mo.emoji} ${mo.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="db-section">
+        <div class="db-label">&#127793; 标签</div>
+        <div class="edit-tags-wrap" id="editTagsWrap">
+          ${(d.keywords||[]).map((k,i)=>`<span class="edit-tag">${esc(k)}<span class="tag-remove" onclick="removeEditTag(${i})">&times;</span></span>`).join('')}
+          <input class="add-tag-input" id="addTagInput" placeholder="+ 标签" onkeydown="addTagKey(event)">
+        </div>
+      </div>`;
+
+    if(d.analysis){
+      body+=`<div class="divider"></div>
+        <div class="db-section"><div class="db-label">&#128300; 梦境分析</div>
+        <textarea class="edit-textarea" id="editAnalysis" style="min-height:80px">${esc(d.analysis)}</textarea></div>`;
+    }
+    document.getElementById('detailBody').innerHTML=body;
+    document.getElementById('actionRow').innerHTML=`
+      <button class="save-edit-btn" onclick="saveEdit()">&#10003; 保存修改</button>
+      <button class="cancel-edit-btn" onclick="cancelEdit()">取消</button>`;
+  } else {
+    // === VIEW MODE ===
+    document.getElementById('detailHeader').innerHTML=`
+      <div class="dh-left">
+        <div class="dh-title">${esc(d.title||'无题之梦')}</div>
+        <div class="dh-meta">
+          <span class="dh-mood mc-${m}">${mi.emoji} ${mi.full}</span>
+          <span class="dh-date">${fmtDate(new Date(d.timestamp))}</span>
+        </div>
+      </div>`;
+
+    let body=`<div class="db-section"><div class="db-text">${esc(d.tidied||d.raw)}</div></div>`;
+    if(d.analysis){
+      const aiLabel=d.aiGenerated?'&#129302; AI 深度解梦':'&#128300; 梦境分析';
+      body+=`<div class="divider"></div>
+        <div class="db-section"><div class="db-label">${aiLabel}</div><div class="db-text">${esc(d.analysis)}</div></div>`;
+    }
+    if(d.keywords&&d.keywords.length){
+      body+=`<div class="db-tags">${d.keywords.map(k=>`<span class="db-tag">${esc(k)}</span>`).join('')}</div>`;
+    }
+    document.getElementById('detailBody').innerHTML=body;
+    document.getElementById('actionRow').innerHTML=`
+      <button class="edit-btn" onclick="enterEdit()">&#9998; 编辑</button>
+      <button class="delete-btn" onclick="deleteDream(${editingIdx})">删除</button>`;
+  }
+}
+
+function enterEdit(){editMode=true;renderDetail();document.getElementById('detailPanel').scrollTo({top:0,behavior:'smooth'})}
+function cancelEdit(){editMode=false;renderDetail()}
+
+// Edit mood picker
+let editMoodVal='';
+function pickEditMood(el){
+  document.querySelectorAll('.edit-mood-opt').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  editMoodVal=el.dataset.mood;
+}
+
+// Edit tags
+function removeEditTag(i){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d||!d.keywords)return;
+  d.keywords.splice(i,1);
+  saveDreams(dreams);
+  renderDetail();
+}
+
+function addTagKey(e){
+  if(e.key!=='Enter')return;
+  const inp=document.getElementById('addTagInput');
+  const val=inp.value.trim();
+  if(!val)return;
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+  if(!d.keywords)d.keywords=[];
+  if(!d.keywords.includes(val)){
+    d.keywords.push(val);
+    saveDreams(dreams);
+  }
+  renderDetail();
+  // Re-focus the input
+  setTimeout(()=>{const ni=document.getElementById('addTagInput');if(ni)ni.focus()},50);
+}
+
+// Save edit
+function saveEdit(){
+  const dreams=loadDreams(),d=dreams[editingIdx];
+  if(!d)return;
+
+  const titleEl=document.getElementById('editTitle');
+  const contentEl=document.getElementById('editContent');
+  const analysisEl=document.getElementById('editAnalysis');
+
+  if(titleEl) d.title=titleEl.value.trim()||d.title;
+  if(contentEl){d.tidied=contentEl.value.trim();if(!d.raw)d.raw=d.tidied;}
+  if(analysisEl) d.analysis=analysisEl.value.trim();
+
+  // Mood
+  const selectedMood=document.querySelector('.edit-mood-opt.selected');
+  if(selectedMood) d.mood=selectedMood.dataset.mood;
+
+  saveDreams(dreams);
+  editMode=false;
+  renderDetail();
+  renderStats();
+  renderList();
+  showToast('修改已保存');
+}
+function closeDetail(){
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  editingIdx=-1;editMode=false;
+}
+
+function deleteDream(idx){
+  confirmDelete(idx);
+}
+
+// ========================================
+// Toast
+// ========================================
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+// ========================================
+// Process & Save dream
+// ========================================
+function processDream(){
+  const raw=document.getElementById('dreamInput').value.trim();
+  if(!raw){showToast('请先描述你的梦境');return}
+  const btn=document.getElementById('processBtn');
+  btn.disabled=true;
+
+  if(hasAIKey()){
+    // AI 分析路径
+    btn.innerHTML='AI 正在解梦 <span class="dots"><span></span><span></span><span></span></span>';
+    analyzeWithAI(raw,currentMood).then(result=>{
+      currentProcessed=result;
+      showResult(result,true);
+      btn.innerHTML='&#10024; 重新整理';btn.disabled=false;
+    }).catch(err=>{
+      console.warn('AI分析失败，降级到本地引擎:',err.message);
+      // 降级到本地分析
+      btn.innerHTML='正在整理 <span class="dots"><span></span><span></span><span></span></span>';
+      setTimeout(()=>{
+        const result=analyzeDream(raw,currentMood);
+        currentProcessed=result;
+        showResult(result,false);
+        btn.innerHTML='&#10024; 重新整理';btn.disabled=false;
+        if(err.message==='NO_KEY'){
+          // 静默降级
+        }else{
+          showToast('AI 暂不可用，已用本地分析');
+        }
+      },600);
+    });
+  }else{
+    // 本地分析路径
+    btn.innerHTML='正在整理 <span class="dots"><span></span><span></span><span></span></span>';
+    setTimeout(()=>{
+      const result=analyzeDream(raw,currentMood);
+      currentProcessed=result;
+      showResult(result,false);
+      btn.innerHTML='&#10024; 重新整理';btn.disabled=false;
+    },1000);
+  }
+}
+
+function showResult(result,isAI){
+  document.getElementById('tidiedContent').textContent=result.tidied;
+  const analysisEl=document.getElementById('analysisContent');
+  if(isAI){
+    // AI 分析用打字机效果
+    analysisEl.textContent='';
+    typeWriter(analysisEl,result.analysis,0);
+  }else{
+    analysisEl.textContent=result.analysis;
+  }
+  document.getElementById('kwContent').innerHTML=result.keywords.map(k=>`<span class="kw-tag">${esc(k)}</span>`).join('');
+  // AI 标记
+  const labelEl=document.querySelector('.db-label-analysis');
+  if(labelEl){
+    labelEl.innerHTML=isAI?'&#129302; AI 深度解梦':'&#128300; 梦境分析';
+  }
+  document.getElementById('resultArea').classList.add('show');
+  document.getElementById('sheet').scrollTo({top:999,behavior:'smooth'});
+}
+
+function typeWriter(el,text,i){
+  if(i<text.length){
+    el.textContent+=text.charAt(i);
+    setTimeout(()=>typeWriter(el,text,i+1),20);
+  }
+}
+
+function saveDream(){
+  if(!currentProcessed)return;
+  const raw=document.getElementById('dreamInput').value.trim();
+  const dreams=loadDreams();
+  dreams.unshift({
+    id:Date.now(),timestamp:Date.now(),raw,
+    tidied:currentProcessed.tidied,analysis:currentProcessed.analysis,
+    keywords:currentProcessed.keywords,title:currentProcessed.title,
+    mood:currentMood||'neutral',
+    aiGenerated:!!currentProcessed.aiGenerated,
+  });
+  saveDreams(dreams);
+  closeSheet();renderStats();renderList();
+  showToast('梦境已保存 ✨');
+}
+
+// ========================================
+// Dream Analysis Engine (kept intact)
+// ========================================
+function analyzeDream(raw,mood){
+  const tidied=tidyText(raw),keywords=extractSymbols(raw),analysis=genAnalysis(raw,mood,keywords),title=genTitle(raw,keywords);
+  return{tidied,analysis,keywords,title};
+}
+function tidyText(raw){
+  let t=raw.trim();
+  t=t.replace(/\.{3,}/g,'……').replace(/。{2,}/g,'。').replace(/,{2,}/g,'，').replace(/!{2,}/g,'！').replace(/\?{2,}/g,'？');
+  const ss=t.split(/(?<=[。！？…\n])/g).map(s=>s.trim()).filter(Boolean);
+  if(ss.length<=1)return t;
+  const shifts=['然后','后来','突然','接着','忽然','这时','之后','最后','可是','但是','不知道为什么','醒来','再后来','紧接着','结果','没想到','等我'];
+  const p=[];let cur=[];
+  ss.forEach(s=>{
+    const isS=shifts.some(w=>s.startsWith(w));
+    if(isS&&cur.length>=2){p.push(cur.join(''));cur=[s]}
+    else{cur.push(s);if(cur.length>=4){p.push(cur.join(''));cur=[]}}
+  });
+  if(cur.length)p.push(cur.join(''));
+  return p.join('\n\n');
+}
+
+function extractSymbols(text){
+  const sm={
+    '水':['水','海','河','湖','雨','泳','溪','浪','洪','潮','瀑布','池塘','泉','井','游泳','潜水','漂流','洗澡','淹','溺'],
+    '飞行':['飞','天空','翅膀','翱翔','漂浮','悬浮','飘','升空','降落伞','气球','风筝'],
+    '坠落':['掉','坠','摔','掉落','下坠','深渊','悬崖','跌','滑落'],
+    '追逐':['追','逃','跑','躲','赶','追赶','逃跑','奔跑','躲藏','被追'],
+    '房屋':['房','屋','楼','家','门','窗','房间','走廊','楼梯','阁楼','地下室','卧室','厨房','客厅','阳台','天台','屋顶'],
+    '动物':['猫','狗','鸟','蛇','鱼','马','兔','狼','虎','龙','蝴蝶','鹿','熊','猴','鹰','乌鸦','老鼠','蜘蛛','蚂蚁','狐狸','鲸','海豚','企鹅','猫头鹰','金鱼','乌龟'],
+    '花草':['花','树','草','森林','叶','花园','植物','玫瑰','樱花','荷花','向日葵','竹','藤','蘑菇','种子','果实','开花','枯萎','落叶'],
+    '道路':['路','桥','隧道','十字路口','小径','迷宫','街道','小巷','大道','铁轨','山路','栈道','台阶'],
+    '光与暗':['光','暗','黑暗','阳光','月光','星光','灯','影子','烛光','彩虹','日出','日落','黎明','黄昏','火焰','萤火虫','霓虹'],
+    '人物':['朋友','家人','同学','陌生人','老师','孩子','老人','妈妈','爸爸','爷爷','奶奶','哥哥','姐姐','弟弟','妹妹','婴儿','小孩','恋人','前任','同事','邻居'],
+    '食物':['吃','食物','饭','水果','蛋糕','面包','糖果','巧克力','冰淇淋','菜','做饭','烹饪','餐厅','甜品','奶茶','咖啡','酒'],
+    '考试':['考试','作业','上学','学校','教室','迟到','课','老师','成绩','毕业','高考','答题','铃声','课桌'],
+    '镜子':['镜','倒影','镜子','玻璃','反射','照镜子'],
+    '钥匙':['钥匙','锁','开门','上锁','密码','打不开','关门'],
+    '时钟':['钟','时间','手表','闹钟','指针','来不及','赶时间','过去','未来'],
+    '山':['山','爬山','山顶','山谷','悬崖','高处','山洞','山峰','登顶'],
+    '天气':['风','雪','雷','闪电','暴风雨','云','雾','冰','霜','台风','龙卷风','天晴','阴天','彩虹'],
+    '交通':['车','火车','飞机','船','自行车','地铁','公交','出租车','高铁','开车','坐车','骑车','堵车','高速'],
+    '衣物':['衣服','裙子','鞋','帽子','穿','换衣','裸','制服','校服','婚纱','西装'],
+    '颜色':['红','蓝','白','黑','绿','紫','金','银','粉','彩色','透明'],
+    '音乐':['歌','唱','音乐','钢琴','吉他','乐器','旋律','声音','铃声','鼓','小提琴','跳舞','舞蹈'],
+    '书信':['信','书','笔记','日记','纸','写字','文字','消息','手机','电话','短信','微信'],
+    '战斗':['打','打架','武器','刀','剑','枪','战争','格斗','对抗','攻击','防御','拳头','盔甲'],
+    '迷失':['迷路','找不到','失去','消失','不见了','丢','忘记','找','寻找','走丢'],
+    '海洋':['大海','海边','沙滩','贝壳','海浪','潜水','海底','珊瑚','海岛','灯塔'],
+    '星空':['星星','月亮','宇宙','银河','太阳','星座','流星','北极光','星球','外太空','UFO','飞碟','外星人'],
+    '城堡':['城堡','宫殿','王国','城墙','塔','古堡','王座','皇冠','公主','王子'],
+    '医院':['医院','医生','护士','生病','药','打针','手术','病房','急救','受伤','伤口','出血'],
+    '电梯':['电梯','上升','下降','楼层','按钮','卡住','失控','升降'],
+    '牙齿':['牙','牙齿','掉牙','拔牙','牙痛'],
+    '裸露':['裸','没穿衣服','光着','赤裸','暴露','走光','尴尬'],
+    '婚礼':['结婚','婚礼','婚纱','新娘','新郎','戒指','求婚','喜宴'],
+    '死亡':['死','去世','葬礼','坟墓','灵魂','鬼','幽灵','复活','棺材','墓地'],
+    '宝藏':['宝藏','金子','珠宝','宝石','宝箱','藏宝','财富','发财','钱','金币','金银'],
+    '地图':['地图','指南针','方向','东南西北','导航','目的地','旅行','出发'],
+    '童年':['小时候','童年','玩具','游乐场','滑梯','秋千','幼儿园','棒棒糖','卡通','动画片','回到过去'],
+    '飞船':['飞船','太空','宇航员','火箭','空间站','失重','漂浮在太空'],
+    '图书馆':['图书馆','书架','书','阅读','古书','藏书','翻书','借书'],
+    '迟到':['迟到','赶','来不及','错过','赶不上','紧张','着急'],
+    '变形':['变成','变形','变大','变小','变身','缩小','巨大','变化','长出'],
+    '隐身':['隐身','看不见','透明','穿墙','消失','隐形','无人注意'],
+  };
+  const found=[];
+  for(const[s,ts]of Object.entries(sm)){if(ts.some(t=>text.includes(t)))found.push(s)}
+  return found.length?found.slice(0,7):['碎片记忆'];
+}
+
+function genAnalysis(text,mood,kw){
+  const mp={
+    peaceful:['这个梦的基调是平静安宁的，像湖面上没有一丝波纹。这可能反映了你内心深处对宁静的向往，也许最近你正在慢慢找到一种内在的平衡。','平静的梦境是一份来自潜意识的礼物，说明你心里有一块柔软安全的地方。好好珍惜这种感觉，它是你面对忙碌日常的力量来源。','梦到平静的场景，通常意味着你正在消化和整合最近的经历。你的内心正在自我修复，像深夜里安静生长的植物。','安宁的梦就像深海底部的寂静，一切喧嚣都被隔绝在外。你的内心正在为自己保留一块不被打扰的净土。','这份平静不是空虚，而是一种圆满。你的潜意识在告诉你：此刻不需要追赶什么，静静待着就很好。','平和的梦境暗示你正在逐渐接纳自己的现状。不需要完美，不需要紧迫，慢慢来就是最快的速度。','梦里那种宁静的感觉像冬天窗户上的雾气——朦胧但温柔。说明你最近在学会一种更温和的方式对待自己。'],
+    mysterious:['梦境带有神秘的色彩，像是潜意识在给你讲一个只有你能听懂的故事。这类梦往往藏着你还没有觉察到的直觉和灵感。','神秘的梦是内心好奇心的投射。也许最近你对某件事有一种说不清的预感，或者正在探索一些全新的可能性。','带有奇幻色彩的梦说明你的想象力正处于活跃期，你的大脑在用一种独特的方式处理信息。试着把这种创造力带到白天的生活中。','这个梦像一本只翻开了一半的旧书，隐约能看到字迹却读不完整。也许你的内心正在酝酿一个还没有成形的想法。','神秘的梦境是潜意识发出的密码，不必急着破解。有些答案会在某个不经意的瞬间自然浮现。','梦里那些看不清的细节反而最耐人寻味。你的直觉正在运转，或许很快你就会在现实中遇到某种似曾相识的感觉。','充满谜题的梦说明你正处在认知的边界上，一只脚踩在已知里，另一只脚在试探未知。这种状态虽然不安，但也充满可能。'],
+    warm:['温暖的梦境像是一杯热可可，连接着你内心最柔软的部分。可能是对某段珍贵关系的眷恋，也可能是你正在给自己一些久违的善意。','梦到温暖的场景，说明你的内心正在被某种爱和归属感滋养着。即使现实中偶尔感到孤单，你的潜意识知道你并不孤独。','这种暖意来自你内心深处的情感储备。你是一个能够感受到美好的人，而这个梦正在提醒你，那些让你心暖的东西一直都在。','温柔的梦像被阳光晒过的棉被，蓬松又安心。这可能是你最近给予别人温暖后，潜意识回赠给你的一份回礼。','梦里的暖意说明你的内心有一团不会熄灭的小火苗。不管外面多冷，你总能在自己身上找到热量。','这个梦像是你内心写给自己的一封信，告诉你：被爱着、被记挂着，是你值得拥有的东西。','温暖的梦境通常在你最需要慰藉的时候出现。它是潜意识的拥抱，虽然看不见但真实存在。'],
+    anxious:['带有紧张感的梦境其实非常常见。它更像是大脑的一次压力测试，在安全的梦境里提前演练可能遇到的挑战。不必太担心，醒来就好了。','焦虑的梦通常是日常压力的一种释放方式。与其说梦在警告你，不如说它在帮你把白天积攒的紧张情绪排出体外。','如果最近你感到有些焦虑，这个梦可能是在帮你处理这些情绪。试着在白天给自己一些放松的时间，让身心都有喘息的空间。','紧张的梦就像身体的信号灯，在提醒你放慢节奏。你不需要把所有事情都做得完美，偶尔放过自己也是一种能力。','焦虑的梦境往往把小问题放大成了大场面——就像用放大镜看蚂蚁。现实中的情况通常没有梦里那么夸张，深呼吸就好。','梦里的紧迫感是你责任心的倒影。你在乎的事情很多，但别忘了最需要被照顾的那个人其实是你自己。','这种梦像是内心的一次消防演练，虽然过程紧张，但结束后你会发现自己比想象中更有应对能力。'],
+    joyful:['开心的梦境是你内心喜悦的延伸！说明即使在睡着的时候，你的心灵也在微笑。这份快乐的能量可以带到明天的生活中去。','梦到欢乐的场景，通常和你最近经历的小确幸有关。也许是一件不起眼的好事，被你的潜意识放大成了一场盛大的庆祝。','欢乐的梦是心理健康的好信号。你的内心有充足的正能量储备，能够让你在梦里也保持愉快。继续保持这种积极的生活态度吧。','快乐的梦像心里开出的烟花，短暂但灿烂。这说明你最近有值得庆祝的事情，哪怕只是一个微小的进步。','梦到开心的场景说明你的内心有很强的自我修复能力。即使白天遇到不顺心的事，到了夜晚你的大脑也会自动调频到积极的频道。','这份快乐是真实的，不是自我安慰。你的潜意识在忠实地记录那些让你嘴角上扬的瞬间，然后在梦里重新播放给你看。','愉悦的梦境像是生活在暗中给你塞的小纸条，上面写着：嘿，其实事情没那么糟，对吧？'],
+    sad:['忧伤的梦并不是坏事，它是你内心在安全地表达和释放某些深层的情感。有些白天没机会流的泪，会在梦里悄悄替你流出来。','梦到忧伤的场景，可能是你正在消化某段经历或者思念某个人。给自己一点温柔的时间，不着急把所有情绪都整理好。','感怀的梦通常和怀旧有关。也许你在想念某个再也回不去的时光，而这份思念本身就说明，那段记忆对你很重要。','悲伤的梦像秋天的落叶，不是衰败而是完成。有些事情在心里放了太久，梦给了它们一个安静的出口。','忧伤的情绪在梦里流淌，就像雨水冲刷屋顶——洗掉的是积尘，留下的是干净。醒来后你可能会感觉轻了一些。','这种梦是心灵的自我清洁。你不需要假装坚强，允许自己在梦里难过，其实是一种深层的自我关怀。','有些悲伤是美的，它证明你曾经深深地在乎过什么。这个梦在替你保管那些珍贵的情感记忆。'],
+    adventurous:['冒险的梦说明你骨子里有一颗不安分的心！你可能正渴望打破某种日常的平淡，去尝试一些新的、刺激的事情。','梦里的冒险往往是内心勇气的投射。也许你正站在一个选择的路口，而潜意识在告诉你：你比自己以为的更勇敢。','刺激的梦境说明你的大脑正在活跃地处理信息，渴望探索和突破。这种内在的驱动力是很珍贵的，可以思考如何在现实中给自己一些新鲜感。','冒险梦是潜意识在帮你试错。梦里摔倒了没关系，重要的是你的内心一直在准备出发。','这种梦像是你给自己写的一张冒险许可证——你不需要等谁的同意，就可以去探索人生的下一章。','刺激的梦境说明你的舒适区正在被突破。虽然过程有些惊心动魄，但这恰恰是成长正在发生的信号。','梦里的冒险精神是你真实性格的放大版。也许白天你把它藏得很好，但在夜里它会挣脱束缚，带你去你真正想去的地方。'],
+    romantic:['甜蜜的梦境说明你内心正渴望亲密和连接。不论现实中的感情状态如何，你的心灵都在表达对爱的向往和珍视。','浪漫的梦通常和你对理想关系的想象有关。它可能不是指向某个具体的人，而是你内心深处对被爱和被理解的渴望。','梦到温柔浪漫的场景，说明你是一个内心充满柔情的人。这种柔软是一种力量，它让你能感受到生活中细腻的美好。','浪漫的梦像心底种下的一颗种子，它会在你准备好的时候悄悄发芽。不管现在身边有没有人，你的爱的能力一直都在。','甜蜜的梦境说明你最近的情感触角格外敏锐。可能是一首歌、一个场景、甚至一句话触动了你心底柔软的部分。','这种梦不只是关于爱情，更是关于你如何理解"连接"。你的内心渴望与某些东西产生深层的共鸣——可能是人，也可能是理想。','浪漫的梦是心灵在为自己编织一个安全的空间，在那里你可以不设防地表达最真实的情感需求。'],
+    neutral:['说不清感觉的梦反而很耐人寻味。它可能混合了很多种情绪，就像一杯调味复杂的饮品，每一口的味道都不太一样。慢慢品味就好。','模糊的梦境情绪说明你的潜意识正在处理比较复杂的信息。不需要急着给它下定义，有时候最好的理解方式就是让它沉淀一段时间。','这种朦胧的感觉其实很有价值。它说明你的梦境包含了多个层次的信息，每个层次都在从不同角度和你对话。','没有强烈情绪的梦反而是内心最诚实的快照。它记录的不是某个极端的瞬间，而是你此刻最真实的心理底色。','这种说不清道不明的梦就像水墨画——没有浓烈的色彩，但每一笔都有它自己的意思。给它一点时间，意义会自己浮现。','不确定的感觉恰恰说明你正处在一个过渡期。旧的还没完全过去，新的还没完全到来，而你的梦在忠实地记录这个中间地带。','情绪复杂的梦说明你是一个感受丰富的人。你的内心不是非黑即白的，而是有无数种灰色在那里混合、碰撞、调和。'],
+  };
+  const sp={
+    '水':['水在梦中代表情绪和潜意识的流动。平静的水面暗示内心安宁，汹涌的水则可能是未被表达的情感在涌动。','水是最古老的梦境符号之一。你和水的互动方式——是在水面上还是水底下，是游泳还是漂流——反映了你目前与自己情绪的关系。','梦见水意味着你正经历某种情感上的转变。水既能滋养万物，也能冲垮堤坝，这取决于你如何与这份情感相处。'],
+    '飞行':['飞行是最令人向往的梦境之一，通常象征着自由和超越。你可能渴望从某种束缚中解脱。','飞行梦是你内心力量感的表达。能飞起来说明你潜意识里相信自己有能力超越当前的处境。','梦里飞行的高度和稳定性很有趣——飞得又高又稳说明你很有掌控感，忽上忽下则暗示你在某件事上还不太确定。'],
+    '坠落':['坠落梦是全世界最常见的梦境之一。它通常和某种失控感有关，也许是你觉得某件事正在脱离掌控。','坠落的感觉虽然吓人，但它其实是大脑在帮你处理"不确定性"。你不是真的在坠落，而是在学习接受未知。','有趣的是，坠落梦往往出现在你即将做出重大改变之前。你的潜意识在用这种方式预演"放手"的感觉。'],
+    '追逐':['被追逐的梦暗示你可能在回避某个问题或情绪。那个追你的东西，往往代表着你不太想面对的事情。','追逐梦的关键不在于追你的是什么，而在于你在跑向哪里。也许你正在逃离的，恰恰是需要你转身面对的。','如果你在梦里被追逐，不妨想想最近有没有一直在拖延或回避的事情。潜意识很诚实，它不会让你轻易躲开。'],
+    '房屋':['房屋在梦中常常象征着"自我"。不同的房间代表你性格的不同面向，发现新房间意味着发现了新的自我。','梦见房子的状态往往反映你的内心状态——明亮整洁说明你最近心态不错，昏暗杂乱可能暗示你需要整理一下内心。','走进陌生的房间、打开尘封的门，这些都暗示你正在探索自己还不太了解的内心领域。每间房都是一个未解的自己。'],
+    '动物':['梦中的动物通常代表你的本能和直觉。温顺的动物暗示你与自己的本能相处融洽，野性的动物则可能是被压抑的情感。','不同的动物携带不同的象征——猫代表独立和直觉，狗代表忠诚和陪伴，鸟代表自由和视角的提升。','梦见动物是潜意识在用最原始的方式和你对话。你在梦里如何对待这只动物，反映了你如何对待自己的天性。'],
+    '花草':['植物象征着成长和生命力。梦见花开可能暗示你正处在一个新的成长阶段，一切都在慢慢绽放。','花草在梦里的状态是你内在生命力的写照——生机盎然说明你精力充沛，枯萎凋零可能暗示你需要补充能量。','梦见种子或发芽尤其有意义，它意味着你内心有一个新的想法或计划正在萌芽，虽然还看不清全貌，但根已经扎下了。'],
+    '道路':['道路代表人生方向和选择。分岔路口可能意味着你正面临一个决定，而你走的那条路暗示了你内心的倾向。','梦见宽阔的大路说明你对未来有信心，狭窄曲折的小径则暗示前方的路需要更多耐心和探索。','道路的尽头有什么，往往反映了你对未来的期待或恐惧。即使路看不到头，走下去本身就是答案。'],
+    '光与暗':['光和暗的交替常常代表意识与潜意识的对话。梦见光明通常是希望和觉醒的象征，而黑暗未必是负面的——它可能是孕育新事物的温床。','梦里的光源很有意味——阳光代表外在的认可，月光代表内在的智慧，烛光代表微小但珍贵的希望。','从黑暗走向光明的梦境是最积极的信号之一，说明你正在经历某种顿悟或突破，内心的迷雾正在消散。'],
+    '人物':['梦中的人物不一定代表他们本人，更可能是你自身某个特质的投射。那个让你在意的人，可能映射着你身上相似的特质。','梦见认识的人时，想想你对这个人最强烈的感受是什么——那份感受可能正是你现在对自己的态度。','梦里出现陌生人尤其值得注意，他们往往代表你尚未认识到的自我面向，是潜意识送来的新朋友。'],
+    '食物':['食物与滋养和满足感有关。梦见丰盛的食物可能反映了你对某种需求的渴望——不一定是生理上的，也可能是情感上的。','梦里吃到美食说明你最近有某种被满足的体验，而吃不到或食物变味则暗示你在某方面感到匮乏。','食物的种类也有意思——甜食和情感需求有关，正餐和安全感有关，自己做饭则暗示你在主动创造自己想要的生活。'],
+    '考试':['考试梦反映的不是对考试本身的恐惧，而是对"被评价"的担心。你可能最近在某个领域感到了被审视的压力。','有趣的是，考试梦在已经离开学校很多年的人身上也很常见。它说的不是成绩，而是你内心深处那个"我够不够好"的声音。','梦见考试来不及或答不上来，通常出现在你要面对重要场合之前。你的大脑在用这种方式帮你提前做心理准备。'],
+    '镜子':['镜子象征着自我认知和审视。你可能正在思考"我是谁"这个问题，或者正在重新审视自己的某个方面。','梦见镜中的自己和现实不同，说明你对自我的认知和真实的自己之间可能存在某种偏差。这不是坏事，而是自我探索的起点。','镜子梦暗示你正处在一个自我反思的阶段。你在镜中看到什么，取决于你愿意对自己多诚实。'],
+    '钥匙':['钥匙象征着解决方案和新机会。你的潜意识可能已经知道某个问题的答案，只是你还没有意识到。','梦见找钥匙说明你正在寻找某种突破口，而梦见得到钥匙则暗示答案即将浮现。','打不开的锁和找不到的钥匙是一组有趣的搭配——它暗示你知道有一条路，但还没有找到正确的方式进入。耐心一点。'],
+    '时钟':['时钟和时间焦虑有关。也许你觉得时间不够用，或者对某个截止日期感到压力。','梦里的时钟走快了还是走慢了很有趣——走快意味着你觉得事情在失控地加速，走慢则说明你在等待某件事发生。','时间在梦里的感觉和现实不同。你对时间的态度，反映的是你对当下的满意度——享受当下的人很少梦到赶时间。'],
+    '山':['山代表着目标和挑战。梦见爬山说明你正在向一个目标努力，而山的高度暗示了你对这个目标的敬畏程度。','站在山顶的梦是成就感的象征——你的潜意识在告诉你，你有能力到达高处。如果还没登顶，说明旅程还在继续。','山谷和山顶一样重要。梦见山谷意味着你正在积蓄力量，处在上升之前的准备阶段。低谷是反弹的起点。'],
+    '天气':['梦里的天气往往直接映射你的情绪状态——晴天对应愉快，暴风雨对应内心的动荡，雪天对应沉静或冷漠。','天气变化的梦特别有意义。从阴转晴说明你正在走出某种低潮，从晴转雨则可能暗示潜在的情绪波动。','极端天气如龙卷风或闪电出现在梦里，说明你正在经历某种剧烈的情感体验。不要怕，风暴过后天会更蓝。'],
+    '海洋':['海洋是潜意识最宏大的象征。梦见大海说明你的内心世界很广阔，有很多还没有被探索的深度。','海面的状态就是你此刻的情绪写照。平静的海是内心的平和，波涛汹涌是情感在剧烈翻涌。','梦见潜入海底是非常珍贵的梦——它意味着你正在勇敢地探索自己最深层的情感和记忆。那些沉在水底的东西值得被看见。'],
+    '星空':['梦见星空通常和梦想与希望有关。星星代表你内心的理想，每一颗都是你尚未实现但一直在乎的东西。','仰望星空的梦说明你最近在思考一些超越日常的大问题——关于未来、关于意义、关于你真正想成为什么样的人。','流星出现在梦里是好兆头，它象征着转瞬即逝但极其珍贵的机会。如果你最近有什么一闪而过的念头，也许值得认真对待。'],
+    '城堡':['城堡象征着安全和权力，也可能代表你为自己建造的心理防御。城堡越高大，你的保护欲越强。','梦见城堡内部的豪华说明你对自己的内在价值有信心，而荒废的城堡可能暗示你忽略了自己的某些需求。','城堡既是堡垒也是牢笼。你的梦在问你：你是在保护自己，还是在把自己关起来？'],
+    '迷失':['迷路的梦反映了方向感的缺失。也许你最近在某件事上拿不定主意，感觉怎么走都不太对。','迷失的梦境虽然让人不安，但它其实在告诉你：你在乎方向。不在乎的人不会迷路，他们只是随便走走。','在梦里迷路往往是现实中某种选择困难的投射。好消息是：既然你在寻找方向，说明你知道方向是重要的。'],
+    '战斗':['战斗梦通常反映内在的冲突。也许你正在和自己的某个部分较劲，或者在两种选择之间拉锯。','梦里的对手是谁很重要——如果是认识的人，可能反映了你和对方之间未解的张力；如果是怪物或陌生人，那更可能是你自己内心的阴影。','战斗的结果不重要，你在梦里选择战斗本身就说明你有面对问题的勇气。逃避的人不会做战斗梦。'],
+    '电梯':['电梯代表人生中的快速变化。上升象征进步和提升，下降暗示你对某种变化的不确定感。','电梯卡住或失控的梦尤其常见，它反映了你在某个快速变化的阶段感到无力掌控。深呼吸，电梯总会到站。','梦见电梯到了一个意想不到的楼层，说明你的人生可能即将出现一个计划之外但并非不好的转折。'],
+    '牙齿':['掉牙梦通常和自信心有关。你可能对自己在某个场合的形象或表达感到担忧。','牙齿象征着力量和表达能力。梦见掉牙可能暗示你最近在某个情境中感到"说不出话"或"无法咬住"。','不过掉牙梦也有积极的一面——旧的牙齿脱落意味着新的生长。你可能正在经历一次蜕变，虽然过程不太舒服。'],
+    '死亡':['死亡梦几乎总是代表"结束与新开始"。某个阶段在结束，新篇章即将展开，不必害怕。','梦见死亡是潜意识中最强烈的变革信号。它说明你的内心已经准备好告别某些旧的模式、习惯或身份。','如果梦里的"死亡"让你感到平静而非恐惧，那更加说明你已经在内心完成了某种放下。新的东西正在路上。'],
+    '宝藏':['宝藏象征着你尚未发现的潜能和价值。也许你身上有某种天赋还没有被充分发挥。','梦见寻宝的过程比找到宝藏更重要——它说明你正在积极地自我探索，愿意花精力去挖掘自己的可能性。','宝藏在梦里出现，是潜意识在提醒你：你拥有的比你以为的要多得多。有些珍贵的东西就在你身边，只是还没被注意到。'],
+    '童年':['梦回童年通常和怀旧以及寻找纯真有关。也许你正渴望一段没有复杂思虑的简单时光。','童年梦是心灵的避风港。当现实变得复杂沉重时，潜意识会把你送回那个一切都更简单的地方去喘口气。','梦里童年的场景和玩伴可能携带着某些你遗落在成长路上的东西——也许是一种无忧的快乐，也许是某个被遗忘的梦想。'],
+    '婚礼':['婚礼梦更多是关于"承诺"和"结合"的象征。你可能正在考虑对某件事做出长期投入。','梦见婚礼不一定和爱情有关。它可能象征着你正在把自己不同的面向"合为一体"，达成某种内在的统一。','婚礼梦里的气氛很关键——欢喜的婚礼说明你对即将做出的承诺感到兴奋，而慌乱的婚礼可能暗示你还没完全准备好。'],
+    '变形':['变形梦说明你正在经历内在的变化和成长。变成什么暗示了你渴望拥有的特质。','梦见自己变大可能是自信心在膨胀，变小可能是觉得自己在某个情境中微不足道。无论哪种，变化本身就是生命力的体现。','变形是最有创造力的梦境之一。你的潜意识在用最直观的方式告诉你：你不是一成不变的，你可以成为任何你想成为的样子。'],
+    '隐身':['隐身梦可能反映了你想要暂时从社交压力中隐退的愿望。有时候，不被看见也是一种休息。','梦里的隐身能力暗示你希望在不被注意的情况下观察世界。也许你最近觉得被太多目光关注，渴望一点安静的空间。','隐身梦也可能反映了一种"不被理解"的感受——你觉得真实的自己没有被看见。这个梦在提醒你：被理解是需要主动表达的。'],
+  };
+  let parts=[];
+  const mArr=mp[mood]||mp.neutral;
+  parts.push(pick(mArr));
+  const rel=kw.filter(k=>sp[k]);
+  shuffle(rel).slice(0,2).forEach(s=>parts.push(pick(sp[s])));
+  const cls=['梦境是内心的私语，不需要过度解读，感受它就好。','试着记住梦境带给你的感觉，那可能比内容本身更有意义。','每个梦都是一面小小的镜子，映照出我们白天不容易注意到的东西。','把梦记下来是很好的习惯，日后回看可能会发现有趣的联系。','晚安，希望明天的梦也一样值得被记住。','你的每一个梦都是独一无二的，就像你本人一样。','夜晚是心灵最诚实的时刻，谢谢你愿意记录下来。','梦是一种不用语言就能和自己对话的方式。你已经在听了，这就够了。','不必急着理解每一个画面，梦境会在你准备好的时候自己揭晓答案。','今晚的梦已经被安全收藏。等哪天翻开这一页，你会看到此刻的自己在想什么。','记录梦境就像给心灵拍照。也许模糊，也许失焦，但每一张都是真实的你。','夜深了，心灵也该休息了。感谢你在这个安静的时刻，和自己的内心聊了一会儿。'];
+  parts.push(pick(cls));
+  return parts.join('\n\n');
+}
+
+function genTitle(text,kw){
+  if(kw.length>0&&kw[0]!=='碎片记忆'){
+    const t=[`关于${kw[0]}的梦`,`${kw[0]}与${kw[1]||'远方'}`,`梦见${kw[0]}`,`${kw[0]}的夜晚`,`夜里的${kw[0]}`,`${kw[0]}来入梦`,`${kw[0]}·碎片`,`${kw[0]}和${kw[1]||'月光'}`];
+    return pick(t);
+  }
+  const sn=text.match(/[\u4e00-\u9fa5]{2,6}/g);
+  if(sn&&sn.length>1)return `${sn[0]}的梦`;
+  return '一个朦胧的梦';
+}
+
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+
+// ========================================
+// AI Analysis Engine (DeepSeek API)
+// ========================================
+const AI_CONFIG={
+  apiKey:'', // 先硬编码调试，之后改为用户输入
+  model:'deepseek-chat',
+  maxTokens:1200,
+  endpoint:'https://api.deepseek.com/chat/completions',
+};
+
+function getAIKey(){
+  return AI_CONFIG.apiKey||localStorage.getItem('dream_ai_key')||'';
+}
+
+function hasAIKey(){return !!getAIKey()}
+
+const DREAM_SYSTEM_PROMPT=`你是一位温柔、富有洞察力的梦境分析师。用户会告诉你他们的梦境内容和当时的情绪。请你：
+
+1. 给这个梦起一个富有诗意的短标题（6字以内）
+2. 提取梦中出现的3-5个关键意象（用逗号分隔）
+3. 写一段温暖、有深度的梦境分析（200-350字），包含：
+   - 对梦境情绪基调的感受
+   - 对关键意象的象征性解读
+   - 可能反映的内心状态或需求
+   - 一句温柔的结尾鼓励
+
+风格要求：像和好朋友聊天一样自然温暖，不要学术腔，不要条目式列举，用流畅的散文体。可以用比喻，但不要过度。
+
+严格按以下JSON格式回复，不要输出任何其他内容：
+{"title":"梦的标题","keywords":["意象1","意象2","意象3"],"analysis":"分析正文"}`;
+
+async function analyzeWithAI(raw,mood){
+  const key=getAIKey();
+  if(!key)throw new Error('NO_KEY');
+
+  const moodNames={peaceful:'平静',mysterious:'神秘',warm:'温暖',anxious:'焦虑',joyful:'欢乐',sad:'忧伤',adventurous:'冒险',romantic:'浪漫',neutral:'说不清'};
+  const moodLabel=moodNames[mood]||'说不清';
+
+  const userMsg=`我的梦境：\n${raw}\n\n做梦时的情绪：${moodLabel}`;
+
+  const resp=await fetch(AI_CONFIG.endpoint,{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+key,
+      'Content-Type':'application/json',
+    },
+    body:JSON.stringify({
+      model:AI_CONFIG.model,
+      max_tokens:AI_CONFIG.maxTokens,
+      response_format:{type:'json_object'},
+      messages:[
+        {role:'system',content:DREAM_SYSTEM_PROMPT},
+        {role:'user',content:userMsg},
+      ],
+    }),
+  });
+
+  if(!resp.ok){
+    const err=await resp.text().catch(()=>'');
+    throw new Error(`API_ERROR_${resp.status}: ${err}`);
+  }
+
+  const data=await resp.json();
+  const text=data.choices?.[0]?.message?.content||'';
+
+  // 解析 JSON 回复
+  const jsonMatch=text.match(/\{[\s\S]*\}/);
+  if(!jsonMatch)throw new Error('PARSE_ERROR');
+
+  const parsed=JSON.parse(jsonMatch[0]);
+  if(!parsed.analysis)throw new Error('PARSE_ERROR');
+
+  return{
+    title:parsed.title||genTitle(raw,parsed.keywords||[]),
+    keywords:parsed.keywords||extractSymbols(raw),
+    analysis:parsed.analysis,
+    tidied:tidyText(raw),
+    aiGenerated:true,
+  };
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ========================================
+// Init
+// ========================================
+function init(){
+  initBg();
+
+  // Register Service Worker for PWA / offline support
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+
+  // Build mood picker in sheet
+  document.getElementById('moodPicker').innerHTML=moods.map(m=>`<button class="mood-opt" data-mood="${m.key}" onclick="pickMood(this)">${m.emoji} ${m.full}</button>`).join('');
+
+  document.getElementById('dreamInput').addEventListener('input',function(){document.getElementById('charCount').textContent=this.value.length});
+  document.getElementById('searchInput').addEventListener('input',function(){searchQuery=this.value.trim();renderList()});
+
+  renderStats();
+  renderMoodFilter();
+  renderList();
+}
+
+function pickMood(el){
+  document.querySelectorAll('.mood-opt').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  currentMood=el.dataset.mood;
+}
+
+// ========================================
+// Settings Panel
+// ========================================
+function toggleSettings(){
+  const o=document.getElementById('settingsOverlay');
+  const p=document.getElementById('settingsPanel');
+  const isOpen=p.classList.contains('open');
+  if(isOpen){
+    o.classList.remove('open');p.classList.remove('open');
+  }else{
+    o.classList.add('open');p.classList.add('open');
+    // 显示当前 key 状态
+    const key=localStorage.getItem('dream_ai_key')||'';
+    const inp=document.getElementById('apiKeyInput');
+    inp.value=key;
+    updateAIStatus();
+  }
+}
+
+function toggleKeyVis(){
+  const inp=document.getElementById('apiKeyInput');
+  inp.type=inp.type==='password'?'text':'password';
+}
+
+function saveAPIKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(key){
+    localStorage.setItem('dream_ai_key',key);
+    showToast('API Key 已保存');
+  }else{
+    localStorage.removeItem('dream_ai_key');
+    showToast('API Key 已清除');
+  }
+  updateAIStatus();
+}
+
+function clearAPIKey(){
+  localStorage.removeItem('dream_ai_key');
+  document.getElementById('apiKeyInput').value='';
+  showToast('API Key 已清除');
+  updateAIStatus();
+}
+
+function updateAIStatus(){
+  const el=document.getElementById('aiStatus');
+  if(hasAIKey()){
+    el.innerHTML='<span style="color:#a78bfa">&#9679;</span> AI 解梦已开启';
+    el.style.color='var(--accent)';
+  }else{
+    el.innerHTML='<span style="color:var(--text-muted)">&#9675;</span> 使用本地分析引擎';
+    el.style.color='var(--text-muted)';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
